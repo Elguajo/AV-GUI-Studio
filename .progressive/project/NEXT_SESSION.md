@@ -27,6 +27,7 @@ RUNNABLE / GREEN
 
 ## Blockers / uncertainty
 
+- The FigCraft fork cannot fetch its git dependencies here: the git transport to github.com resets the connection (task-06-r1 checkpoint has the recovery steps).
 - The native editor currently supports one 1025M screen. The target layout still requires GUI Designer Build, configured GCP feedback and physical panel verification at their respective gates.
 
 ## Next action

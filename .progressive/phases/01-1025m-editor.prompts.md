@@ -173,7 +173,7 @@ Not started. Superseded before execution.
 
 Task: Build GUI Studio on the FigCraft base and export the 1025M demo through it.
 Status: READY
-Freshness: UNCHECKED
+Freshness: CURRENT
 Source: Current user request and ADR-002.
 Supersedes: task-05-r1
 
@@ -202,10 +202,12 @@ Not in scope: multi-page, components as Extron states beyond buttons, GCP verifi
 
 Recheck the fork commit, the toolchain (stable-x86_64-pc-windows-gnu 1.100) and FigCraft's own AGENTS.md before execution.
 
+- 2026-11-23: Phase 01 is active and ADR-002 still governs this target. GUI-Studio is clean at 3b7e5b7. The clean local fork is at b828e6c7, with only the storytold upstream remote. Read the fork AGENTS.md and confirmed stable-x86_64-pc-windows-gnu, rustc and Cargo 1.100.0. The exporter 0.8.8 DLL, donor registry and .NET 10 runtime are present. Both Python commands resolve to Store aliases and failed with Python was not found, so the Progressive Python tools were not run. Local implementation and verification are authorized; publishing is outside this task.
+
 #### Current checkpoint
 
-Clone created at FigCraft b828e6c. Release build of `figcraft` started.
+Clone created at FigCraft b828e6c. The build is blocked before compiling because cargo cannot fetch the git dependency `storytold/vectorcraft` @6b3a6b8 (required through craft-libs → craft-svg). Recovery: when github.com git transport works, run `cargo fetch --locked` in the fork (optionally with `CARGO_NET_GIT_FETCH_WITH_CLI=true`), then `cargo build --release -p figcraft`.
 
 #### Outcome / evidence
 
-Pending execution.
+- 2026-11-23: `cargo build --release -p figcraft` failed while resolving git dependencies: "The server name or address could not be resolved". A retry with `CARGO_NET_GIT_FETCH_WITH_CLI=true` failed with "`git fetch` failed". `git ls-remote https://github.com/storytold/vectorcraft.git` failed with "curl 56 Recv failure: Connection was reset", while the GitHub API reports the repository as public. This is a network or transport problem on this machine, not a FigCraft code error. Nothing was compiled.
