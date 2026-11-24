@@ -252,12 +252,12 @@ Replace single-error validation with object-level diagnostics in a Problems pane
 #### Prompt
 
 ```text
-In ../gui-studio-fork, connect the Extron Problems panel to the diagnostics returned by extron.validate. Use each diagnostic's nodeId to select and reveal its layer. Keep errors actionable in the CLI and keep invalid exports blocked. Use the Aurora Meeting Room demo and one invalid edit to verify that the panel updates and selection stays in sync with the canvas and Layers. Scope is the Problems panel for the current single-screen model.
+In this repository (the editor moved here per ADR-003), connect the Extron Problems panel to the diagnostics returned by extron.validate. Use each diagnostic's nodeId to select and reveal its layer. Keep errors actionable in the CLI and keep invalid exports blocked. Use the Aurora Meeting Room demo and one invalid edit to verify that the panel updates and selection stays in sync with the canvas and Layers. Scope is the Problems panel for the current single-screen model.
 ```
 
 #### Freshness check
 
-Confirm task-06-r1 is completed, the fork retains the Extron command and node-level diagnostics, and the Phase 01 Problems panel is still open.
+Confirm task-06-r1 is completed, the editor retains the Extron command and node-level diagnostics, and the Phase 01 Problems panel is still open.
 
 #### Current checkpoint
 

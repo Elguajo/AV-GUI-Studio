@@ -2,13 +2,12 @@
 
 ## Current state and target
 
-The Windows editor is implemented in the local FigCraft-based fork at `../gui-studio-fork`. Its first Extron profile is TLP Pro 1025M. The desktop and headless CLI share registered commands that project the editable document into EXUI/5 and invoke the existing exporter to build a GDL. The Aurora Meeting Room demo exports the same independent verifier result and GDL payload as the original eframe prototype. Selective updates and the Pencil adapter are planned.
+The Windows editor lives at the root of this repository. It is built on a snapshot of FigCraft `b828e6c7`. Its first Extron profile is TLP Pro 1025M. The desktop and headless CLI share registered commands that project the editable document into EXUI/5 and invoke the existing exporter to build a GDL. The Aurora Meeting Room demo exports the same independent verifier result and GDL payload as the original eframe prototype. Selective updates and the Pencil adapter are planned.
 
-The fork follows [ADR-002](../decisions/ADR-002-figcraft-base.md). Its `upstream` remote points to FigCraft and its base is `b828e6c7`.
-- FigCraft supplies the engine, document model, command registry and egui workspace.
-- The fork adds `crates/extron` and `extron.*` commands, with Extron metadata in node `plugin_data`.
-- The EXUI/5 writer and 1025M demo were ported from `src/project.rs` and `src/exui.rs`.
-- The original eframe implementation in `src/studio*` remains available as a reference for export comparison.
+The editor follows [ADR-002](../decisions/ADR-002-figcraft-base.md) and [ADR-003](../decisions/ADR-003-independent-repository.md). GUI Studio is independent of FigCraft. Chosen upstream changes are ported by cherry-pick, and FigCraft is never merged.
+- FigCraft supplies the engine (`crates/engine`), document model (`crates/doc`), command registry and egui workspace (`crates/ui-egui`). The layer rules, commands and checks are in [docs/figcraft-agents.md](../../docs/figcraft-agents.md) under "This repository", and in [docs/architecture.md](../../docs/architecture.md).
+- GUI Studio adds `crates/extron` and the `extron.*` commands (`crates/engine/src/cmd/extron.rs`, `crates/ui-egui/src/extron.rs`), with Extron metadata in node `plugin_data`. The desktop app is `apps/figcraft` (binary `gui-studio`) and the CLI is `apps/figcraft-cli` (binary `gui-studio-cli`).
+- The EXUI/5 writer and 1025M demo were ported from the eframe prototype. Tag `eframe-prototype` keeps it as a reference for export comparison (`src/project.rs`, `src/exui.rs`, `src/studio*`).
 
 ```text
 Supported .pen import ──> GUI Studio project model <──> file, canvas, inspector, preview

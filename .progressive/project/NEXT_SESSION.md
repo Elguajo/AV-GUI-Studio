@@ -8,6 +8,8 @@ Phase 01 — TLP Pro 1025M editor, Figma interaction core and GDL export
 
 ## Completed this session
 
+- Moved the FigCraft-based editor into this repository as an independent product (ADR-003). The former `../gui-studio-fork` checkout is no longer the working copy. Tag `eframe-prototype` keeps the eframe prototype.
+- Fixed Extron text size units: canvas px, exported pt.
 - Built and ran the unmodified FigCraft baseline and the rebranded GUI Studio Windows app.
 - Ported the 1025M model, node metadata, diagnostics and EXUI writer to the fork, and added the registered desktop and CLI commands.
 - Completed [task-06-r1](../phases/01-1025m-editor.prompts.md#task-06-r1).
@@ -23,7 +25,7 @@ RUNNABLE / GREEN
 
 ## Blockers / uncertainty
 
-None for the current target.
+The uncommitted task-07 Problems panel work from the former fork checkout was copied into this working tree and is not committed. Review it here and continue task-07 in this repository.
 
 ## Next action
 

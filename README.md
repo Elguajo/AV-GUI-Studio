@@ -42,4 +42,8 @@ Pass `--in aurora.figcraft` to run against a saved design. Root-confined automat
 
 ## License
 
-GUI Studio is a downstream fork of FigCraft. See [NOTICE](NOTICE), [LICENSE-MIT](LICENSE-MIT), [LICENSE-APACHE](LICENSE-APACHE) and [asset provenance](ATTRIBUTION.md).
+GUI Studio is an independent product built on a snapshot of [FigCraft](https://github.com/storytold/figcraft) `b828e6c7`, which is licensed MIT OR Apache-2.0. Selected FigCraft changes are ported by hand ([ADR-003](.progressive/decisions/ADR-003-independent-repository.md)). See [NOTICE](NOTICE), [LICENSE-MIT](LICENSE-MIT), [LICENSE-APACHE](LICENSE-APACHE) and [asset provenance](ATTRIBUTION.md).
+
+## Project specs
+
+Product brief, architecture, decisions and phase plans are in [Progressive Context Kit](.progressive/project/PROJECT_BRIEF.md). The original eframe prototype is kept at tag `eframe-prototype`.

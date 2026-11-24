@@ -1,6 +1,6 @@
 # ADR-002 — GUI Studio on top of FigCraft
 
-Status: Accepted
+Status: Accepted. The "Fork as base" decision is superseded by [ADR-003](ADR-003-independent-repository.md).
 Date: 2026-11-23
 Supersedes: the editor implementation in [ADR-001](ADR-001-workspace-canvas.md). The Brief's experience and visual-language principles still apply.
 

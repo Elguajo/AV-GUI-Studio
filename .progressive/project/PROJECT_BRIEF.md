@@ -37,7 +37,7 @@ GUI Studio is our version of Extron GUI Designer: a standalone Rust desktop appl
 
 ## Explicit constraints
 
-- Rust for the editor, built on a fork of the open-source FigCraft editor (MIT OR Apache-2.0, [ADR-002](../decisions/ADR-002-figcraft-base.md)). FigCraft and ArtCraft branding are not used. Extron is the first export target.
+- Rust for the editor, built as an independent product on a snapshot of the open-source FigCraft editor (MIT OR Apache-2.0, [ADR-002](../decisions/ADR-002-figcraft-base.md), [ADR-003](../decisions/ADR-003-independent-repository.md)). FigCraft and ArtCraft branding are not used. Extron is the first export target.
 - Preserve editable native controls and their significant identifiers in GDL. GCP owns device commands, feedback, and program navigation.
 - Work is local. Real-time collaboration, AI generation, vector networks, rotation and additional export targets are out of scope until the brief changes.
 
