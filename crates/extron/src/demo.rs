@@ -4,6 +4,7 @@ use figcraft_color::{Color as CanvasColor, Paint};
 use figcraft_doc::{Document, Node, NodeId, NodeKind, TextAlignH, TextAlignV, TextAutoResize, TextData};
 use figcraft_geom::Affine;
 
+use crate::adapter::PX_PER_PT;
 use crate::metadata::{Kind, Metadata};
 use crate::model::{Color, Control, HEIGHT, PROFILE, StateRole, WIDTH};
 
@@ -86,7 +87,7 @@ fn text_layer(doc: &mut Document, name: &str, rect: [i32; 4], caption: String, c
     let mut data = TextData::new(caption);
     data.style.font_family = "Arial".into();
     data.style.font_style = "Regular".into();
-    data.style.font_size = f64::from(size);
+    data.style.font_size = f64::from(size) * PX_PER_PT;
     data.auto_resize = TextAutoResize::None;
     data.align_h = align;
     data.align_v = TextAlignV::Middle;

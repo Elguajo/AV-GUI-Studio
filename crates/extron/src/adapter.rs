@@ -132,6 +132,10 @@ fn radius(node: &Node) -> Result<u8, String> {
     Ok(r.round() as u8)
 }
 
+/// Canvas text sizes are px and Extron font sizes are pt, converted by the exporter's px × 0.75
+/// rule (figma-extron-exporter `src/figma-plugin/NATIVE_TEXT.md`).
+pub(crate) const PX_PER_PT: f64 = 4.0 / 3.0;
+
 fn text(node: &Node, align: TextAlignH) -> Result<(String, Color, u8), String> {
     appearance(node)?;
     let NodeKind::Text(data) = &node.kind else { return Err("A native caption must be a text layer.".into()) };
@@ -143,10 +147,11 @@ fn text(node: &Node, align: TextAlignH) -> Result<(String, Color, u8), String> {
     supported.align_v = TextAlignV::Middle;
     supported.auto_resize = data.auto_resize;
     supported.saved_breaks = data.saved_breaks.clone();
-    if &supported != data || !data.style.font_size.is_finite() || !(4.0..=200.0).contains(&data.style.font_size) {
-        return Err("Use uniform Arial Regular (4–200), middle aligned, with the native caption alignment.".into());
+    let points = (data.style.font_size / PX_PER_PT).round();
+    if &supported != data || !points.is_finite() || !(4.0..=200.0).contains(&points) {
+        return Err("Use uniform Arial Regular at 4–200 pt (px × 0.75), middle aligned, with the native caption alignment.".into());
     }
-    Ok((data.characters.clone(), solid(node)?, data.style.font_size.round() as u8))
+    Ok((data.characters.clone(), solid(node)?, points as u8))
 }
 
 fn slider(doc: &Document, node: &Node, data: &Metadata) -> Result<Control, String> {
