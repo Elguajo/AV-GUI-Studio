@@ -17,8 +17,8 @@ Take one meeting room screen through import or authoring, visual editing, persis
 - [ ] Select a genuine, versioned `.pen` fixture with reusable controls and supported overrides. Implement and test that mapping, with object-level diagnostics for unsupported nodes.
 - [x] Connect initial EXUI and GDL exports to the existing converter.
 - [ ] ~~Implement the Figma interaction core according to ADR-001 ([task-05-r1](01-1025m-editor.prompts.md#task-05-r1)).~~ Superseded by ADR-002.
-- [ ] Build GUI Studio on FigCraft: rebrand the fork, add `crates/extron` with the ported model and EXUI/5 writer, add `extron.*` commands, and keep Extron metadata in `plugin_data`. Author the 1025M demo and export a GDL that passes the independent verifier. See [task-06-r1](01-1025m-editor.prompts.md#task-06-r1).
-- [ ] Replace single-error validation with object-level diagnostics in a Problems panel. Clicking a diagnostic selects its object. Mirror GUI Designer's rules from the study (§13.2):
+- [x] Build GUI Studio on FigCraft: rebrand the fork, add `crates/extron` with the ported model and EXUI/5 writer, add `extron.*` commands, and keep Extron metadata in `plugin_data`. Author the 1025M demo and export a GDL that passes the independent verifier. See [task-06-r1](01-1025m-editor.prompts.md#task-06-r1).
+- [ ] Replace single-error validation with object-level diagnostics in a Problems panel. Clicking a diagnostic selects its object. See [task-07-r1](01-1025m-editor.prompts.md#task-07-r1). Mirror GUI Designer's rules from the study (§13.2):
   - shared Control IDs require the same control type and state count;
   - page and popup names are unique;
   - an unreferenced popup is a warning;

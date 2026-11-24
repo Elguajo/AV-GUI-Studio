@@ -2,13 +2,13 @@
 
 ## Current state and target
 
-The Windows desktop editor uses eframe/egui 0.33.3 for the authoring workspace and a versioned local JSON document for one TLP Pro 1025M screen. The editor emits EXUI/5 and can invoke the existing `figma-extron-exporter` CLI to build and independently verify a new GDL. Selective updating of configured layouts and the Pencil source adapter are planned.
+The Windows editor is implemented in the local FigCraft-based fork at `../gui-studio-fork`. Its first Extron profile is TLP Pro 1025M. The desktop and headless CLI share registered commands that project the editable document into EXUI/5 and invoke the existing exporter to build a GDL. The Aurora Meeting Room demo exports the same independent verifier result and GDL payload as the original eframe prototype. Selective updates and the Pencil adapter are planned.
 
-Target per [ADR-002](../decisions/ADR-002-figcraft-base.md): GUI Studio becomes a downstream fork of FigCraft. The local clone is `../gui-studio-fork`, with an `upstream` remote, based on FigCraft `b828e6c` (2026-11-23).
-- FigCraft supplies the engine, document model, command registry and UI3-style egui workspace.
-- GUI Studio adds the `crates/extron` crate and `extron.*` commands, with Extron metadata in node `plugin_data`.
-- The EXUI/5 writer is ported from `src/project.rs` and `src/exui.rs`.
-- The current eframe editor in `src/studio*` stays runnable until the fork exports the 1025M demo, then it is retired.
+The fork follows [ADR-002](../decisions/ADR-002-figcraft-base.md). Its `upstream` remote points to FigCraft and its base is `b828e6c7`.
+- FigCraft supplies the engine, document model, command registry and egui workspace.
+- The fork adds `crates/extron` and `extron.*` commands, with Extron metadata in node `plugin_data`.
+- The EXUI/5 writer and 1025M demo were ported from `src/project.rs` and `src/exui.rs`.
+- The original eframe implementation in `src/studio*` remains available as a reference for export comparison.
 
 ```text
 Supported .pen import ──> GUI Studio project model <──> file, canvas, inspector, preview

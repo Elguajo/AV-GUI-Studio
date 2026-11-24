@@ -172,7 +172,7 @@ Not started. Superseded before execution.
 ### task-06-r1
 
 Task: Build GUI Studio on the FigCraft base and export the 1025M demo through it.
-Status: READY
+Status: COMPLETED
 Freshness: CURRENT
 Source: Current user request and ADR-002.
 Supersedes: task-05-r1
@@ -206,8 +206,63 @@ Recheck the fork commit, the toolchain (stable-x86_64-pc-windows-gnu 1.100) and 
 
 #### Current checkpoint
 
-Clone created at FigCraft b828e6c. The build is blocked before compiling because cargo cannot fetch the git dependency `storytold/vectorcraft` @6b3a6b8 (required through craft-libs → craft-svg). Recovery: when github.com git transport works, run `cargo fetch --locked` in the fork (optionally with `CARGO_NET_GIT_FETCH_WITH_CLI=true`), then `cargo build --release -p figcraft`.
+Windows desktop and CLI builds and export acceptance are complete. The fork has an editable 1025M demo, GUI Studio branding, native metadata and all four registered Extron commands. The Windows menu and CLI GDLs match the original editor's demo. Final verification artifacts are in ../gui-studio-fork/target/task-06-evidence/.
 
 #### Outcome / evidence
 
 - 2026-11-23: `cargo build --release -p figcraft` failed while resolving git dependencies: "The server name or address could not be resolved". A retry with `CARGO_NET_GIT_FETCH_WITH_CLI=true` failed with "`git fetch` failed". `git ls-remote https://github.com/storytold/vectorcraft.git` failed with "curl 56 Recv failure: Connection was reset", while the GitHub API reports the repository as public. This is a network or transport problem on this machine, not a FigCraft code error. Nothing was compiled.
+- 2026-11-23: Recovered the Git dependencies from shallow fetches of the locked revisions. The first isolated build reached crate downloads and failed on static.crates.io. The next reached compilation and failed on ring v0.17.14 because gcc.exe was absent. A local GCC 16.2.0 installation under the fork's ignored target directory then compiled a C probe with the matched MinGW headers and DLLs.
+- 2026-11-23: cargo test --locked --offline --release -p gui-studio-extron --target-dir target/windows-fork passed two tests. They cover retained identity after an edit and node-level diagnostics for copied identity and rotated geometry.
+- 2026-11-23: A probe calling the fork's Extron crate exported the demo. Exporter 0.8.8 validate-package accepted 1 page, 15 elements and 0 resources. convert-package's independent verifier passed 182/182 checks. list-controls decoded the GDL, and compare-graph reported identical payloads with zero differences. Both GDL files had SHA-256 857C516155A5A1152EA621BFB8AB1AA8AF391ADABF8FF6300BD6B5AA64B1056E. The reference was generated from the original editor's --demo-exui. The fork artifact is ../gui-studio-fork/target/task-06-evidence/ported-demo.gdl.
+- 2026-11-23: Built the unmodified b828e6c7 snapshot on Windows with cargo build --offline --locked --release -p figcraft, using a workspace-local GCC and CRT import libraries. The first link failed on ktmw32, propsys, shlwapi and version. After supplying the verified MinGW CRT through LIBRARY_PATH, the build succeeded. Started figcraft.exe with a workspace-local profile. Windows reported a visible FigCraft window, and the localhost window.list endpoint reported the focused main window. Closed the baseline window after the check.
+- Implementation commit in the local fork: `97bbf0e3c753371dd6d786fc653a1e3833144dae`.
+
+##### Windows release and menu
+
+- 2026-11-23: The Windows GNU release-profile build produced gui-studio.exe and gui-studio-cli.exe. The desktop window title and Windows ProductName, FileDescription and CompanyName were GUI Studio. The two upstream license files and the original attribution header in NOTICE were unchanged. The replacement ICO has nine sizes.
+- Invoked New 1025M demo, Validate screen, Export EXUI and Build GDL through the desktop's File menu command path. Both saves completed in the native Windows dialogs. Validation returned 15 elements and zero diagnostics. Exporter 0.8.8 validated the UI EXUI and decoded the GDL; the UI GDL SHA-256 matched the original demo. Captured the application window and inspected its Windows UI Automation tree.
+
+##### Headless round trip
+
+- 2026-11-23: gui-studio-cli commands --filter extron listed all four commands. A CLI script ran the demo, validation, save, EXUI export and GDL build. Reopening the saved design and exporting again produced byte-identical EXUI. The independent verifier passed 182/182 checks and compare-graph found identical GDL payloads. GDL SHA-256 matched the original editor's demo, including page and all element Object IDs and all Control IDs.
+- A second build to the existing GDL failed and preserved its hash. A root-confined CLI run refused external GDL build before creating an output.
+
+##### Repository checks
+
+- 2026-11-23: The fork's xtask layers and assets checks passed. xtask parity reported 215/215. Targeted Extron Clippy and the two crate tests passed. The full changed-package suite was started.
+- 2026-11-24: The release-profile build passed for the Windows app, CLI and xtask. Repeated the native menu and CLI export on the final binaries. The final UI and CLI GDLs both retained SHA-256 857C516155A5A1152EA621BFB8AB1AA8AF391ADABF8FF6300BD6B5AA64B1056E with 182/182 checks. The final CLI save/reopen EXUI was byte-identical. Captured the window and read the accessibility tree, including the Aurora Meeting Room tab and Home and Mute layers. See ui-smoke-verified and cli-smoke-verified in the evidence directory.
+- The Windows test run passed the editor (88 tests), CLI (27 unit and 35 integration tests), engine (2,277 tests), UI (1,352 tests), and the other touched crate suites. One stale collab-net brand assertion failed in the wide run and passed on the targeted re-run (four link tests passed). The final translation recheck passed all 28 tests. Final Clippy for all targets of the changed packages, rustfmt, xtask layers and assets passed. xtask parity reported 215/215. The test and build logs are under the fork's target directory.
+- The build used the pinned Rust GNU toolchain, an isolated Cargo cache, and verified MinGW compiler and CRT files under the fork's target directory. The release profile used opt-level=1 without LTO for local checks. Four checksum-verified Inter faces from craft-fonts 26a7923 were provided through CRAFT_FONTS_DIR for the final build and test run. Without an embedded default face, the inherited board text-layout tests had failed.
+- EXUI node assignments retain the exui-node/1 identity fields. Slider and shape records use the exporter's exui-node/2 extension. The Figma-compatible document codec and Cargo package IDs were retained for compatibility.
+- Python was unavailable. The Progressive audit was not run. The scope of this verification is Windows, so xtask wasm was not run and only the Windows GNU target was installed.
+
+### task-07-r1
+
+Task: Display Extron validation findings in a Problems panel and select the affected layer.
+Status: READY
+Freshness: UNCHECKED
+Source: Phase 01 Problems panel task and the diagnostics delivered by task-06-r1.
+
+#### Request
+
+```text
+Replace single-error validation with object-level diagnostics in a Problems panel. Clicking a diagnostic selects its object.
+```
+
+#### Prompt
+
+```text
+In ../gui-studio-fork, connect the Extron Problems panel to the diagnostics returned by extron.validate. Use each diagnostic's nodeId to select and reveal its layer. Keep errors actionable in the CLI and keep invalid exports blocked. Use the Aurora Meeting Room demo and one invalid edit to verify that the panel updates and selection stays in sync with the canvas and Layers. Scope is the Problems panel for the current single-screen model.
+```
+
+#### Freshness check
+
+Confirm task-06-r1 is completed, the fork retains the Extron command and node-level diagnostics, and the Phase 01 Problems panel is still open.
+
+#### Current checkpoint
+
+The validation command returns node IDs and messages. The desktop shows the first diagnostic as a toast.
+
+#### Outcome / evidence
+
+Pending execution.
