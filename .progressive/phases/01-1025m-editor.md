@@ -18,7 +18,14 @@ Take one meeting room screen through import or authoring, visual editing, persis
 - [x] Connect initial EXUI and GDL exports to the existing converter.
 - [ ] ~~Implement the Figma interaction core according to ADR-001 ([task-05-r1](01-1025m-editor.prompts.md#task-05-r1)).~~ Superseded by ADR-002.
 - [x] Build GUI Studio on FigCraft: rebrand the fork, add `crates/extron` with the ported model and EXUI/5 writer, add `extron.*` commands, and keep Extron metadata in `plugin_data`. Author the 1025M demo and export a GDL that passes the independent verifier. See [task-06-r1](01-1025m-editor.prompts.md#task-06-r1).
-- [ ] Replace single-error validation with object-level diagnostics in a Problems panel. Clicking a diagnostic selects its object. See [task-07-r1](01-1025m-editor.prompts.md#task-07-r1). Mirror GUI Designer's rules from the study (§13.2):
+- [ ] Fix text size units. Extron font sizes are points, and the exporter converts px to pt by ×0.75 (`figma-extron-exporter/src/figma-plugin/NATIVE_TEXT.md`). The fork stores the pt value directly as `font_size` in px (`crates/extron/src/demo.rs`, `adapter.rs`), so the canvas draws text 25 % smaller than the panel. Store px in the document (pt × 4/3, as the eframe canvas did) and convert to pt in the adapter. The demo EXUI must stay byte-identical.
+- [ ] Author Extron controls in the fork. Add commands for an empty 1025M panel and for inserting or assigning Button, Slider, Label and Shape, using the presets and default sizes from `Kind::create` and `Kind::default_size` in the eframe `src/project.rs`. Allocate Object and Control IDs from a monotonic counter stored in the panel frame's `plugin_data`, so a deleted ID is never handed to a new control.
+- [ ] Port the identity tests from the eframe prototype: restyle, reorder and reopen keep Mute's key and IDs, and a replacement after delete gets a new ID (`save_reopen_and_restyle_retains_mute_identity`). Port the ignored GDL test `tests/extron_export.rs`, which builds two GDL versions and compares `ObjectId`, `ControlId`, `Comments` and `PressFeedbackState` through `list-controls`.
+- [ ] Restore exporter discovery and run GDL builds off the UI thread:
+  - read `GUI_STUDIO_EXTRON_CLI` and `GUI_STUDIO_DONOR_REGISTRY`, the name the README and the GDL test use (the fork currently reads `GUI_STUDIO_EXTRON_DONORS`);
+  - fall back to a sibling `figma-extron-exporter` 0.8.8 smoke kit, then to a dialog that selects the CLI DLL and the registry;
+  - run `extron.buildGdl` in a worker thread with a progress status and disabled export actions, following the `figcraft-save` thread in `crates/ui-egui/src/app/files.rs`.
+- [ ] Replace single-error validation with object-level diagnostics in a Problems panel. Clicking a diagnostic selects its object. See [task-07-r1](01-1025m-editor.prompts.md#task-07-r1). Bring back the eframe model's Error and Warning severities: errors block export and warnings do not. Mirror GUI Designer's rules from the study (§13.2):
   - shared Control IDs require the same control type and state count;
   - page and popup names are unique;
   - an unreferenced popup is a warning;
@@ -47,7 +54,7 @@ Take one meeting room screen through import or authoring, visual editing, persis
   - One key toggles Control ID badges, which never cover the object's text.
   - Ctrl+Z and Ctrl+Shift+Z undo and redo every document change. Ctrl+/ opens quick actions, which show why an action is unavailable.
 - [ ] The workspace uses FigCraft's theme tokens and code-drawn icons in light and dark themes, branded as GUI Studio.
-- [ ] Check the interaction checklist against the FigCraft base on Windows, and add only the Extron-specific pieces it lacks, such as Control ID badges and panel-profile frames.
+- [ ] Check the interaction checklist against the FigCraft base on Windows, and add only the Extron-specific pieces it lacks, such as Control ID badges, panel-profile frames, and an Extron inspector section with Object ID, Control ID, a Normal / Active / Pressed state switch and the panel profile, as the eframe inspector had.
 - [ ] Invalid geometry, duplicate IDs, malformed files, and unsupported input report an actionable object or file. Failed exports leave existing project files and GDL outputs intact.
 - [ ] An independently read GDL confirms native types and IDs. Both copies pass Verify and Save and Build in GUI Designer.
 - [ ] A style-only change to Mute preserves object key, Object ID, Control ID, and state identity. The revised layout preserves Mute's action and visual feedback when the GCP project is reopened. A removed or incompatible replacement never silently inherits those bindings.

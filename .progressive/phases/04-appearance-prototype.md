@@ -8,7 +8,7 @@ Let designers use rich appearance that native properties cannot express, preview
 
 - Design-time gradients, shadows, strokes and images, following Appearance fidelity in the Brief. Buttons export them as per-state PNG images and passive decoration exports them as graphics.
 - GDL states have two image layers, a background and a button or icon image, plus a per-state Blinking flag (study §13.3). EXUI/5 currently exposes one `image` per state. Using the icon layer needs an EXUI extension in the exporter.
-- Prototype preview of page and popup navigation and control states. Runtime navigation in GCP remains out of scope.
+- Prototype preview of page and popup navigation and control states. Runtime navigation in GCP remains out of scope. Match the eframe prototype's preview: a click toggles a button's Active state, holding it shows Pressed, and dragging a slider moves its fill and thumb. In the fork this maps to variant swaps in FigCraft prototyping.
 - Project version history with named versions and restore.
 - Quality aids from GUI Designer:
   - PNG snapshots of pages and of page and popup permutations;
