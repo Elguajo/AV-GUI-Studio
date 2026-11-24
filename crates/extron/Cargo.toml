@@ -1,0 +1,21 @@
+[package]
+name = "gui-studio-extron"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "GUI Studio native panel model and EXUI/5 export"
+
+[lints]
+workspace = true
+
+[dependencies]
+figcraft-color = { workspace = true }
+figcraft-doc = { workspace = true }
+figcraft-geom = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+zip = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tempfile = "3"

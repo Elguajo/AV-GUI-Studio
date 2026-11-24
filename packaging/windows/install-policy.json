@@ -1,0 +1,126 @@
+{
+  "id": "figcraft",
+  "name": "GUI Studio",
+  "upgradeCode": "6A20AFB0-1719-4997-B174-FF986FAAFD9F",
+  "sources": [
+    "figcraft.wxs"
+  ],
+  "icon": "assets/app-icon/figcraft.ico",
+  "localization": [
+    "figcraft.en-us.wxl"
+  ],
+  "extensions": [
+    "UI",
+    "Util"
+  ],
+  "payloads": [
+    "NOTICE",
+    "gui-studio-cli.exe",
+    "gui-studio.exe"
+  ],
+  "registry": [
+    [
+      "-1",
+      "Software\\Classes\\Figcraft.Image\\shell\\open\\command",
+      "",
+      "\"[#FigcraftExe]\" \"%1\""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\.svg\\OpenWithProgids",
+      "Figcraft.Image",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\.png\\OpenWithProgids",
+      "Figcraft.Image",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\.jpg\\OpenWithProgids",
+      "Figcraft.Image",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\.jpeg\\OpenWithProgids",
+      "Figcraft.Image",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\Figcraft.Sketch\\shell\\open\\command",
+      "",
+      "\"[#FigcraftExe]\" \"%1\""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\.sketch\\OpenWithProgids",
+      "Figcraft.Sketch",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\Applications\\gui-studio.exe",
+      "FriendlyAppName",
+      "GUI Studio"
+    ],
+    [
+      "-1",
+      "Software\\Classes\\Applications\\gui-studio.exe\\shell\\open\\command",
+      "",
+      "\"[#FigcraftExe]\" \"%1\""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      ".figcraft",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      ".svg",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      ".png",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      ".jpg",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      ".jpeg",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      ".sketch",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\gui-studio.exe",
+      "",
+      "[#FigcraftExe]"
+    ],
+    [
+      "-1",
+      "Software\\GUI Studio",
+      "InstallDir",
+      "[INSTALLFOLDER]"
+    ]
+  ],
+  "mode": "dualScope"
+}
