@@ -74,6 +74,8 @@ pub use dev::tailwind;
 pub use extensions::plugin_directory;
 pub use extensions::plugins;
 pub use extensions::widgets;
+/// The Extron touch panel model, its panel catalog and EXUI export, for the UI.
+pub use gui_studio_extron;
 pub use selection::rename;
 pub use selection::selection_colors;
 pub use selection::selection_reorder;
@@ -150,6 +152,8 @@ pub struct Session {
     pub libraries: library::Cache,
     /// Plugin modules loaded in this session and the last plugin run.
     pub plugins: plugins::Runtime,
+    /// The installed Extron UI kits (the built-in ones are always there).
+    pub kits: cmd::extron::KitStore,
     /// The live sessions (collaboration), one per document at most: status, peers, presence.
     /// [`Session::live`] is the active document's.
     pub live: live::Lives,
@@ -330,6 +334,8 @@ mod export_depth_tests;
 mod export_profile_tests;
 #[cfg(test)]
 mod extended_chain_tests;
+#[cfg(test)]
+mod extron_authoring_tests;
 #[cfg(test)]
 mod eyedropper_create_tests;
 #[cfg(test)]

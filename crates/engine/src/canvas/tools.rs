@@ -47,6 +47,8 @@ pub enum ToolId {
     Frame,
     Section,
     Slice,
+    /// A new page of the touch panel project: a panel-sized artboard (Extron).
+    Artboard,
     Rectangle,
     Line,
     Arrow,
@@ -72,13 +74,14 @@ pub enum ToolId {
 }
 
 impl ToolId {
-    pub const ALL: [ToolId; 27] = [
+    pub const ALL: [ToolId; 28] = [
         ToolId::Move,
         ToolId::Scale,
         ToolId::Hand,
         ToolId::Frame,
         ToolId::Section,
         ToolId::Slice,
+        ToolId::Artboard,
         ToolId::Rectangle,
         ToolId::Line,
         ToolId::Arrow,
@@ -109,6 +112,7 @@ impl ToolId {
             ToolId::Frame => "frame",
             ToolId::Section => "section",
             ToolId::Slice => "slice",
+            ToolId::Artboard => "artboard",
             ToolId::Rectangle => "rectangle",
             ToolId::Line => "line",
             ToolId::Arrow => "arrow",
@@ -148,6 +152,7 @@ impl ToolId {
             ToolId::Frame => "Frame",
             ToolId::Section => "Section",
             ToolId::Slice => "Slice",
+            ToolId::Artboard => "Artboard",
             ToolId::Rectangle => "Rectangle",
             ToolId::Line => "Line",
             ToolId::Arrow => "Arrow",
@@ -194,6 +199,8 @@ impl ToolId {
         match self {
             ToolId::Line | ToolId::Arrow => (100.0, 0.0),
             ToolId::Section => (400.0, 300.0),
+            // An artboard has the panel's size and its top-left corner where it is pressed.
+            ToolId::Artboard => (0.0, 0.0),
             _ => (100.0, 100.0),
         }
     }
@@ -204,6 +211,7 @@ impl ToolId {
             ToolId::Frame
                 | ToolId::Section
                 | ToolId::Slice
+                | ToolId::Artboard
                 | ToolId::Rectangle
                 | ToolId::Ellipse
                 | ToolId::Polygon

@@ -69,6 +69,7 @@ impl Group {
 const GROUPS: &[Group] = &[
     Group::tools("move", tr_noop("Move tools"), &[(ToolId::Move, Icon::Move), (ToolId::Hand, Icon::Hand), (ToolId::Scale, Icon::Scale)]),
     Group::tools("frame", tr_noop("Frame tools"), &[(ToolId::Frame, Icon::Frame), (ToolId::Section, Icon::Section), (ToolId::Slice, Icon::Slice)]),
+    Group::tools("artboard", tr_noop("Artboard"), &[(ToolId::Artboard, Icon::Artboard)]),
     Group::tools(
         "shape",
         tr_noop("Shape tools"),

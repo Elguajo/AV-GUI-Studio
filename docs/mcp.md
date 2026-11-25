@@ -134,8 +134,28 @@ built-in fonts. Attached, the app's own fonts apply. The browser build has no sy
 
 ## Configure a client
 
-Build the CLI first (`cargo build --release -p figcraft-cli`) and use the absolute path to
-`target/release/figcraft-cli`.
+Build the CLI first (`cargo build --locked --release -p figcraft-cli`). In GUI Studio the binaries are
+`target/release/gui-studio-cli` (the `figcraft-cli` below) and `target/release/gui-studio` (the app,
+`figcraft` below); on Windows they end in `.exe`.
+
+This repository already carries project configs for both clients, each with two servers:
+`gui-studio` (headless) and `gui-studio-app` (attached to an app started with
+`gui-studio --control 7979`):
+
+- Claude Code reads [`.mcp.json`](../.mcp.json) and asks once to approve its servers. `/mcp` shows
+  whether they are connected.
+- Codex (CLI, IDE extension and desktop app) reads [`.codex/config.toml`](../.codex/config.toml) only
+  once you trust the project. Its `command` is relative to the repository root; when your Codex starts
+  servers elsewhere, register the absolute path instead:
+
+```sh
+codex mcp add gui-studio -- D:/path/to/GUI-Studio/target/release/gui-studio-cli.exe mcp
+codex mcp add gui-studio-app -- D:/path/to/GUI-Studio/target/release/gui-studio-cli.exe mcp --attach 7979
+```
+
+`gui-studio-app` needs the app running first: started without it, the server exits with `can't reach
+the GUI Studio app at 127.0.0.1:7979`, and the client lists it as failed. Start the app with
+`--control 7979`, then reconnect it (`/mcp` in Claude Code, or a new Codex session).
 
 The Linux AppImage bundles the CLI: `FigCraft.AppImage cli <args>` runs `figcraft-cli <args>`, so
 `/path/to/FigCraft.AppImage cli mcp` works wherever `/path/to/figcraft-cli mcp` appears below.

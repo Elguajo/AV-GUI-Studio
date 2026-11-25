@@ -51,6 +51,11 @@ screenshot returns a PNG of the page or of given layers to look at. undo/redo st
 Comments: comment.list returns threads (text, anchor node id, frame, page, x/y, replies); fix open ones, \
 reply with what changed, then resolve (a reply reopens a thread). To react to new feedback, call \
 wait_for_changes {after, timeoutMs} and pass the returned cursor back. \
+Extron TLP Pro 1025M screens: extron.newPanel opens a new document with an empty 1280x800 panel; \
+extron.insert {kind: button|slider|label|shape, x?, y?, name?, text?} adds a native control with its \
+Object and Control IDs; extron.assign {kind, ids?} makes layers directly in the panel controls; \
+extron.validate lists what blocks export with each problem's nodeId, layer and message; \
+extron.exportExui {path} writes the EXUI. Edit a button's look and caption on its state variants. \
 Resources: figcraft://document, figcraft://node/{id}, figcraft://command/{id}, figcraft://comments. \
 prompts/list has workflows, including fix_comments.";
 

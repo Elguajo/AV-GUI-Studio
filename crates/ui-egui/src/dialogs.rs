@@ -171,6 +171,8 @@ pub fn keys(app: &mut FigApp, ctx: &Context) {
         || u.menu_input.is_some()
         || u.find.is_some()
         || u.batch_rename.is_some()
+        || u.new_project.is_some()
+        || u.kits_window.is_some()
         || u.import_report.is_some()
         || u.missing_fonts.is_some()
         || u.confirm_close
@@ -186,6 +188,8 @@ pub fn keys(app: &mut FigApp, ctx: &Context) {
         || u.color_profile.take().is_some()
         || u.find.take().is_some()
         || u.batch_rename.take().is_some()
+        || u.new_project.take().is_some()
+        || u.kits_window.take().is_some()
         || u.import_report.take().is_some()
         || u.missing_fonts.take().is_some()
     {
@@ -394,6 +398,8 @@ pub fn show(app: &mut FigApp, ctx: &Context) {
         app.ui.find = if open { Some((find, replace)) } else { None };
     }
     batch_rename_dialog(app, ctx);
+    crate::extron::new_project_dialog(app, ctx);
+    crate::extron::kits_dialog(app, ctx);
     menu_input_dialog(app, ctx);
     crate::variables_panel::show(app, ctx);
     crate::dev_compare::show(app, ctx);

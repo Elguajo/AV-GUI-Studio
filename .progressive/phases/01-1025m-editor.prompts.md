@@ -239,8 +239,8 @@ Windows desktop and CLI builds and export acceptance are complete. The fork has 
 ### task-07-r1
 
 Task: Display Extron validation findings in a Problems panel and select the affected layer.
-Status: READY
-Freshness: UNCHECKED
+Status: COMPLETED
+Freshness: CHECKED (2026-11-25)
 Source: Phase 01 Problems panel task and the diagnostics delivered by task-06-r1.
 
 #### Request
@@ -261,8 +261,15 @@ Confirm task-06-r1 is completed, the editor retains the Extron command and node-
 
 #### Current checkpoint
 
-The validation command returns node IDs and messages. The desktop shows the first diagnostic as a toast.
+A Problems section under the layers lists every export problem of an Extron screen and follows edits and undo. `extron.validate` returns `nodeId`, `layer` and `message` per problem, and blocked exports fail with one line per problem.
 
 #### Outcome / evidence
 
-Pending execution.
+- 2026-11-25: Freshness confirmed. task-06-r1 is completed, `extron.validate` still returns node-level diagnostics, and the Phase 01 Problems task was open. The work copied from the former fork checkout was reviewed in this repository.
+- Diagnostics now carry the layer name. Shared Control IDs follow GUI Designer's rules (study §13.2): a different control type or a button with a different state count gets GUI Designer's reason, and a compatible share still blocks because EXUI/5 needs unique Control IDs. Each message names the first owner of the key or ID. Off-screen geometry reports the 1280 × 800 bounds instead of a generic container error.
+- The desktop Problems section re-validates only when the document snapshot changes. It reads the document directly, so validation never bumps the revision. Activating a problem selects its layer, reveals it in Layers and centres it, or zooms to fit when it is larger than the view. A page-level problem opens the page. Validate screen expands the section and toasts the problem count. Documents without Extron assignments show no section.
+- `cargo test --locked --offline -p gui-studio-extron` passed 5 tests, including `a_layer_moved_off_the_screen_names_the_screen_bounds` and `shared_control_ids_follow_gui_designer_rules_and_name_the_first_owner`.
+- `cargo test -p figcraft-ui-egui extron` passed the 3 `extron_problems_tests`. They cover the Aurora demo with an invalid edit (title moved to x = −10): the list updates without a revision bump, a click on the problem selects the title, Layers reveals it and the canvas centres it, undo empties the list, a blocked `extron.exportExui` names `"Room title" (node N)` and writes no file, and a non-Extron document shows no section. The 28 i18n tests passed.
+- Clippy with warnings denied for all targets of `gui-studio-extron`, `figcraft-engine` and `figcraft-ui-egui` passed, as did rustfmt. The only warnings came from the workspace manifest, which this task did not change.
+- Not run: the desktop window was not launched for a manual check, and the full package suites were not rerun.
+- Scope: every current rule is an error. GUI Designer's one warning (an unreferenced popup) and the unique page and popup names need pages and popups, so the Warning severity and those rules moved to Phase 02. The panel already draws warnings differently.

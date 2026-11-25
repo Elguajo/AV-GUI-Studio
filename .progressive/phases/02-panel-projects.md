@@ -10,6 +10,9 @@ Author and export real multi-page room interfaces with popups, frames, groups an
 - Frames and groups with nested selection. Double-click or Enter selects children and Shift+Enter selects the parent.
 - Design-time auto layout: Shift+A, direction, gap, padding, alignment, and hug, fill and fixed sizing.
 - Constraints for frame resize.
+- Validation for pages and popups in the Problems panel, carried over from Phase 01 task-07. Bring back the eframe model's Error and Warning severities: errors block export and warnings do not. Page and popup names must be unique (error). An unreferenced popup gets GUI Designer's warning (study §13.2).
+
+Pages as panel artboards, their EXUI/5 project-form export and the Artboard tool landed early as a Phase 01 change request (2026-11-25). The Pages panel, popups, navigation and a chosen start page remain here.
 
 ## Acceptance criteria
 

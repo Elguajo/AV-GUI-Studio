@@ -6,24 +6,26 @@ use figcraft_geom::Affine;
 
 use crate::adapter::PX_PER_PT;
 use crate::metadata::{Kind, Metadata};
-use crate::model::{Color, Control, HEIGHT, PROFILE, StateRole, WIDTH};
+use crate::model::{Color, Control, DEFAULT_PROFILE, StateRole};
 
-const INK: Color = Color([230, 244, 243]);
-const MINT: Color = Color([122, 234, 188]);
+pub(crate) const INK: Color = Color([230, 244, 243]);
+pub(crate) const MINT: Color = Color([122, 234, 188]);
 const DIM: Color = Color([148, 176, 184]);
 
 pub fn document() -> Result<Document, String> {
     let name = "Aurora Meeting Room";
     let mut doc = Document::new(name);
     let root = doc.current_page.ok_or("Missing design page.")?;
-    let mut frame = node(&mut doc, NodeKind::Frame, "Home", [0, 0, WIDTH, HEIGHT]);
+    let panel = DEFAULT_PROFILE;
+    let mut frame = node(&mut doc, NodeKind::Frame, "Home", [0, 0, panel.width, panel.height]);
     fill(&mut frame, Color([10, 27, 35]));
     let mut data = Metadata::new(&frame, Kind::Page);
-    data.profile = Some(PROFILE.into());
+    data.profile = Some(panel.id.into());
     data.project_name = Some(name.into());
     data.object_id = Some(100);
     data.key = Some("page.home".into());
     assign(&mut frame, &data)?;
+    let variant_x = panel.width + 96;
     let panel = insert(&mut doc, frame, root)?;
 
     let mut variant_y = 0;
@@ -38,7 +40,7 @@ pub fn document() -> Result<Document, String> {
                 (shape, Kind::Shape)
             }
             Control::Button { states, size } => {
-                let appearance = ButtonVariants { name, rect, states, size, y: variant_y };
+                let appearance = ButtonVariants { name, rect, states, size, at: [variant_x, variant_y] };
                 let layer = button(&mut doc, root, appearance)?;
                 variant_y += rect[3] + 96;
                 (layer, Kind::Button)
@@ -63,27 +65,27 @@ pub fn document() -> Result<Document, String> {
     Ok(doc)
 }
 
-fn node(doc: &mut Document, kind: NodeKind, name: &str, rect: [i32; 4]) -> Node {
+pub(crate) fn node(doc: &mut Document, kind: NodeKind, name: &str, rect: [i32; 4]) -> Node {
     let [x, y, w, h] = rect.map(f64::from);
     let mut node = Node::new(doc.alloc_id(), kind, name, w, h);
     node.transform = Affine::translate((x, y));
     node
 }
 
-fn insert(doc: &mut Document, layer: Node, parent: NodeId) -> Result<NodeId, String> {
+pub(crate) fn insert(doc: &mut Document, layer: Node, parent: NodeId) -> Result<NodeId, String> {
     doc.insert(layer, parent, None).map_err(|err| err.to_string())
 }
 
-fn assign(node: &mut Node, data: &Metadata) -> Result<(), String> {
+pub(crate) fn assign(node: &mut Node, data: &Metadata) -> Result<(), String> {
     data.write(node).map_err(|err| err.to_string())
 }
 
-fn fill(node: &mut Node, color: Color) {
+pub(crate) fn fill(node: &mut Node, color: Color) {
     let [r, g, b] = color.0;
     node.fills = vec![Paint::solid(CanvasColor::from_rgb8_const(r, g, b))];
 }
 
-fn text_layer(doc: &mut Document, name: &str, rect: [i32; 4], caption: String, color: Color, size: u8, align: TextAlignH) -> Node {
+pub(crate) fn text_layer(doc: &mut Document, name: &str, rect: [i32; 4], caption: String, color: Color, size: u8, align: TextAlignH) -> Node {
     let mut data = TextData::new(caption);
     data.style.font_family = "Arial".into();
     data.style.font_style = "Regular".into();
@@ -96,18 +98,19 @@ fn text_layer(doc: &mut Document, name: &str, rect: [i32; 4], caption: String, c
     layer
 }
 
-struct ButtonVariants<'a> {
-    name: &'a str,
-    rect: [i32; 4],
-    states: [crate::model::ButtonState; 3],
-    size: u8,
-    y: i32,
+pub(crate) struct ButtonVariants<'a> {
+    pub name: &'a str,
+    pub rect: [i32; 4],
+    pub states: [crate::model::ButtonState; 3],
+    pub size: u8,
+    /// Where the variant set goes on the page.
+    pub at: [i32; 2],
 }
 
-fn button(doc: &mut Document, root: NodeId, variants: ButtonVariants<'_>) -> Result<Node, String> {
-    let ButtonVariants { name, rect, states, size, y } = variants;
+pub(crate) fn button(doc: &mut Document, root: NodeId, variants: ButtonVariants<'_>) -> Result<Node, String> {
+    let ButtonVariants { name, rect, states, size, at: [x, y] } = variants;
     let [_, _, w, h] = rect;
-    let set = node(doc, NodeKind::ComponentSet { description: String::new() }, name, [WIDTH + 96, y, 3 * (w + 12), h + 24]);
+    let set = node(doc, NodeKind::ComponentSet { description: String::new() }, name, [x, y, 3 * (w + 12), h + 24]);
     let set_id = insert(doc, set, root)?;
     let mut first = None;
     for (role, state) in StateRole::ALL.into_iter().zip(states) {
@@ -132,7 +135,7 @@ fn button(doc: &mut Document, root: NodeId, variants: ButtonVariants<'_>) -> Res
     Ok(layer)
 }
 
-fn slider(doc: &mut Document, id: NodeId, rect: [i32; 4], colors: [Color; 3]) -> Result<(), String> {
+pub(crate) fn slider(doc: &mut Document, id: NodeId, rect: [i32; 4], colors: [Color; 3]) -> Result<(), String> {
     let [_, _, w, h] = rect;
     let track_y = (h - 12) / 2;
     let parts = [
@@ -149,11 +152,11 @@ fn slider(doc: &mut Document, id: NodeId, rect: [i32; 4], colors: [Color; 3]) ->
     Ok(())
 }
 
-fn label(text: &str, size: u8, color: Color) -> Control {
+pub(crate) fn label(text: &str, size: u8, color: Color) -> Control {
     Control::Label { text: text.into(), color, size }
 }
 
-fn source(text: &str, active: bool) -> Control {
+pub(crate) fn source(text: &str, active: bool) -> Control {
     let normal = if active { (Color([40, 95, 82]), MINT) } else { (Color([33, 61, 69]), INK) };
     let on = Color([12, 34, 32]);
     let states = StateRole::ALL.map(|role| {

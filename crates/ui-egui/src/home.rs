@@ -350,8 +350,9 @@ fn action_card(ui: &mut Ui, t: &Tokens, icon: Icon, title: &str, sub: &str) -> b
 
 fn recents(app: &mut FigApp, ui: &mut Ui, t: &Tokens) {
     heading(ui, t, tr("Recents"));
-    let (mut new_file, mut new_board, mut open) = (false, false, false);
+    let (mut new_file, mut new_board, mut open, mut new_panel) = (false, false, false, false);
     ui.horizontal_wrapped(|ui| {
+        new_panel = action_card(ui, t, Icon::Artboard, tr("New touch panel project"), tr("Choose an Extron panel, then design its pages"));
         new_file = action_card(ui, t, Icon::PenNib, tr("New design file"), tr("Start from a blank canvas"));
         new_board = action_card(ui, t, Icon::Board, tr("New board"), tr("Sticky notes, shapes and connectors"));
         open = action_card(ui, t, Icon::Page, tr("Open file"), tr("Open .figcraft, .svg or images"));
@@ -362,6 +363,9 @@ fn recents(app: &mut FigApp, ui: &mut Ui, t: &Tokens) {
     }
     if open {
         app.open_dialog();
+    }
+    if new_panel {
+        crate::extron::open_new_project(app);
     }
     // Join a file someone shared (the Join dialog shows what the join is doing).
     subheading(ui, t, tr("Join with a code"));

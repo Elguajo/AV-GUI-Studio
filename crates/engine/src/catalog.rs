@@ -25,6 +25,9 @@ pub static SEARCH_ALIASES: &[(&str, &str)] = &[("view.devMode", "Dev Mode")];
 pub static MENU: &[MenuItem] = &[
     // File
     m!("File", "New design file", "file.new"),
+    m!("File/Extron", "New touch panel project…", "extron.newPanel"),
+    m!("File/Extron", "Add page", "extron.addPage"),
+    m!("File/Extron", "UI kits…", "extron.kitsWindow"),
     m!("File/Extron", "New 1025M demo", "extron.demo"),
     m!("File/Extron", "Validate screen", "extron.validate"),
     m!("File/Extron", "Export EXUI…", "extron.exportExui"),
@@ -285,6 +288,7 @@ pub static MENU: &[MenuItem] = &[
     m!("Tools", "Frame", "tool.frame"),
     m!("Tools", "Section", "tool.section"),
     m!("Tools", "Slice", "tool.slice"),
+    m!("Tools", "Artboard", "tool.artboard"),
     m!("Tools", "Rectangle", "tool.rectangle"),
     m!("Tools", "Line", "tool.line"),
     m!("Tools", "Arrow", "tool.arrow"),
@@ -313,6 +317,10 @@ const OWN: &[&str] = &[
     "text.missingFonts",
     "image.crop",
     "text.directionAuto",
+    "extron.newPanel",
+    "extron.addPage",
+    "extron.kitsWindow",
+    "tool.artboard",
     "extron.demo",
     "extron.validate",
     "extron.exportExui",

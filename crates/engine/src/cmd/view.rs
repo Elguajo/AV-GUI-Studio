@@ -667,6 +667,7 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!("tool.frame", "Frame", "{}", false, |s, _| tool(s, ToolId::Frame)),
         spec!("tool.section", "Section", "{}", false, |s, _| tool(s, ToolId::Section)),
         spec!("tool.slice", "Slice", "{}", false, |s, _| tool(s, ToolId::Slice)),
+        spec!("tool.artboard", "Artboard", "{}", false, |s, _| tool(s, ToolId::Artboard)),
         spec!("tool.rectangle", "Rectangle", "{}", false, |s, _| tool(s, ToolId::Rectangle)),
         spec!("tool.line", "Line", "{}", false, |s, _| tool(s, ToolId::Line)),
         spec!("tool.arrow", "Arrow", "{}", false, |s, _| tool(s, ToolId::Arrow)),

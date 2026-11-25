@@ -320,6 +320,13 @@ fn draw(p: &P, icon: Icon) {
             p.rect(2.5, 5.5, 13.5, 13.5, 1.0);
             p.fill_rect(2.0, 2.0, 9.0, 6.0, 1.0);
         }
+        Artboard => {
+            p.rect(4.5, 4.5, 11.5, 11.5, 0.0);
+            p.line(4.5, 1.0, 4.5, 3.0);
+            p.line(1.0, 4.5, 3.0, 4.5);
+            p.line(11.5, 13.0, 11.5, 15.0);
+            p.line(13.0, 11.5, 15.0, 11.5);
+        }
         Slice => {
             // A knife, one silhouette (#739): a slim blade to the top right, outlined like the
             // rest of the row, and a solid handle whose end overlaps the blade's base so the two

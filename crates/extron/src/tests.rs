@@ -2,6 +2,7 @@ use figcraft_doc::NodeKind;
 use serde_json::Value;
 use zip::ZipArchive;
 
+use crate::model::Control;
 use crate::{demo, package, project};
 
 fn screen(doc: &figcraft_doc::Document) -> Value {
@@ -61,11 +62,57 @@ fn canvas_text_is_px_and_exports_as_points() {
 #[test]
 fn reports_copied_identity_and_unsupported_geometry_at_each_layer() {
     let mut doc = demo().unwrap();
-    let panel = project(&doc).unwrap().page;
+    let panel = project(&doc).unwrap().pages[0].node;
     let title = doc.nodes().find(|node| node.name == "Room title").unwrap().id;
     let copy = doc.duplicate_into(title, panel, None).unwrap();
     doc.node_mut(title).unwrap().transform = figcraft_geom::Affine::rotate(0.1);
     let errors = project(&doc).unwrap_err();
     assert!(errors.iter().any(|item| item.node_id == copy && item.message.contains("Copied Extron assignment")));
-    assert!(errors.iter().any(|item| item.node_id == title && item.message.contains("Rotated")));
+    assert!(errors.iter().any(|item| item.node_id == title && item.layer == "Room title" && item.message.contains("Rotated")));
+}
+
+#[test]
+fn a_layer_moved_off_the_screen_names_the_screen_bounds() {
+    let mut doc = demo().unwrap();
+    let title = doc.nodes().find(|node| node.name == "Room title").unwrap().id;
+    doc.node_mut(title).unwrap().transform = figcraft_geom::Affine::translate((-10.0, 20.0));
+    let errors = project(&doc).unwrap_err();
+    assert_eq!(errors.len(), 1, "{errors:?}");
+    assert_eq!((errors[0].node_id, errors[0].layer.as_str()), (title, "Room title"));
+    assert_eq!(errors[0].message, "Element must fit inside the 1280 × 800 screen.");
+    assert_eq!(errors[0].to_string(), format!("\"Room title\" (node {title}): Element must fit inside the 1280 × 800 screen."));
+}
+
+#[test]
+fn shared_control_ids_follow_gui_designer_rules_and_name_the_first_owner() {
+    let mut screen = project(&demo().unwrap()).unwrap();
+    let index = |screen: &crate::Project, pick: fn(&Control) -> bool, nth: usize| {
+        screen.pages[0].elements.iter().enumerate().filter(|(_, item)| pick(&item.control)).nth(nth).unwrap().0
+    };
+    let button = |c: &Control| matches!(c, Control::Button { .. });
+    let (first, second) = (index(&screen, button, 0), index(&screen, button, 1));
+    let slider = index(&screen, |c| matches!(c, Control::Slider { .. }), 0);
+    let label = index(&screen, |c| matches!(c, Control::Label { .. }), 0);
+    let shared = screen.pages[0].elements[first].identity.control_id;
+    for item in [second, slider, label] {
+        screen.pages[0].elements[item].identity.control_id = shared;
+    }
+    let owner = screen.pages[0].elements[first].name.clone();
+    let errors = screen.diagnostics();
+    let message = |item: usize| {
+        let node = screen.pages[0].elements[item].node;
+        let found: Vec<_> = errors.iter().filter(|e| e.node_id == node).collect();
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert_eq!(found[0].layer, screen.pages[0].elements[item].name);
+        found[0].message.clone()
+    };
+    let id = shared.unwrap();
+    // Compatible buttons may share an ID in GUI Designer; EXUI/5 export still needs unique IDs.
+    assert_eq!(
+        message(second),
+        format!("Control ID {id} is shared with \"{owner}\". EXUI/5 export needs a unique Control ID for each control on the screen.")
+    );
+    assert_eq!(message(slider), format!("Control ID {id} is already used by \"{owner}\", a button. Only controls of the same type can share IDs."));
+    assert_eq!(message(label), "A label cannot have a Control ID.");
+    assert_eq!(errors.len(), 3, "{errors:?}");
 }

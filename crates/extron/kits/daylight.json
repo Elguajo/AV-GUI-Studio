@@ -1,0 +1,348 @@
+{
+  "schema": "gui-studio-kit/1",
+  "id": "daylight",
+  "name": "Daylight",
+  "description": "A light panel with white cards and blue feedback, for bright rooms.",
+  "author": "GUI Studio",
+  "background": "#F2F4F7",
+  "button": {
+    "normal": {
+      "fill": "#FFFFFF",
+      "text": "#1D2939"
+    },
+    "active": {
+      "fill": "#2E90FA",
+      "text": "#FFFFFF"
+    },
+    "pressed": {
+      "fill": "#1570EF",
+      "text": "#FFFFFF"
+    },
+    "size": 21
+  },
+  "slider": {
+    "track": "#D0D5DD",
+    "fill": "#2E90FA",
+    "thumb": "#1D2939"
+  },
+  "label": {
+    "color": "#1D2939",
+    "muted": "#667085",
+    "size": 22
+  },
+  "shape": {
+    "fill": "#E4E7EC",
+    "radius": 12
+  },
+  "blocks": [
+    {
+      "name": "Header",
+      "description": "A room name with a line above it",
+      "size": [
+        860,
+        120
+      ],
+      "items": [
+        {
+          "kind": "label",
+          "name": "Overline",
+          "rect": [
+            0,
+            0,
+            650,
+            36
+          ],
+          "text": "ROOM CONTROL",
+          "size": 18,
+          "muted": true
+        },
+        {
+          "kind": "label",
+          "name": "Room title",
+          "rect": [
+            0,
+            44,
+            860,
+            75
+          ],
+          "text": "Meeting Room",
+          "size": 50
+        }
+      ]
+    },
+    {
+      "name": "Source selection",
+      "description": "A card with three source buttons",
+      "size": [
+        704,
+        348
+      ],
+      "items": [
+        {
+          "kind": "shape",
+          "name": "Source card",
+          "rect": [
+            0,
+            0,
+            704,
+            348
+          ]
+        },
+        {
+          "kind": "label",
+          "name": "Source title",
+          "rect": [
+            31,
+            32,
+            510,
+            45
+          ],
+          "text": "Input source",
+          "size": 28
+        },
+        {
+          "kind": "label",
+          "name": "Source hint",
+          "rect": [
+            31,
+            85,
+            540,
+            36
+          ],
+          "text": "Select what appears on the display.",
+          "size": 17,
+          "muted": true
+        },
+        {
+          "kind": "button",
+          "name": "HDMI",
+          "rect": [
+            31,
+            158,
+            201,
+            82
+          ]
+        },
+        {
+          "kind": "button",
+          "name": "USB-C",
+          "rect": [
+            251,
+            158,
+            201,
+            82
+          ]
+        },
+        {
+          "kind": "button",
+          "name": "Wireless",
+          "rect": [
+            471,
+            158,
+            201,
+            82
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Room audio",
+      "description": "A card with a volume slider and Mute",
+      "size": [
+        428,
+        348
+      ],
+      "items": [
+        {
+          "kind": "shape",
+          "name": "Audio card",
+          "rect": [
+            0,
+            0,
+            428,
+            348
+          ]
+        },
+        {
+          "kind": "label",
+          "name": "Audio title",
+          "rect": [
+            32,
+            32,
+            332,
+            45
+          ],
+          "text": "Room audio",
+          "size": 28
+        },
+        {
+          "kind": "label",
+          "name": "Volume label",
+          "rect": [
+            32,
+            85,
+            330,
+            36
+          ],
+          "text": "Volume",
+          "size": 17,
+          "muted": true
+        },
+        {
+          "kind": "slider",
+          "name": "Volume",
+          "rect": [
+            32,
+            134,
+            363,
+            45
+          ]
+        },
+        {
+          "kind": "button",
+          "name": "Mute",
+          "rect": [
+            32,
+            207,
+            363,
+            62
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Navigation bar",
+      "description": "Four page buttons across a 1280 px screen",
+      "size": [
+        1280,
+        80
+      ],
+      "items": [
+        {
+          "kind": "shape",
+          "name": "Navigation bar",
+          "rect": [
+            0,
+            0,
+            1280,
+            80
+          ]
+        },
+        {
+          "kind": "button",
+          "name": "Home",
+          "rect": [
+            24,
+            12,
+            180,
+            56
+          ]
+        },
+        {
+          "kind": "button",
+          "name": "Sources",
+          "rect": [
+            220,
+            12,
+            180,
+            56
+          ]
+        },
+        {
+          "kind": "button",
+          "name": "Audio",
+          "rect": [
+            416,
+            12,
+            180,
+            56
+          ]
+        },
+        {
+          "kind": "button",
+          "name": "Settings",
+          "rect": [
+            612,
+            12,
+            180,
+            56
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Volume",
+      "description": "A compact volume control that fits a 300M",
+      "size": [
+        296,
+        150
+      ],
+      "items": [
+        {
+          "kind": "label",
+          "name": "Volume label",
+          "rect": [
+            0,
+            0,
+            296,
+            36
+          ],
+          "text": "Volume",
+          "size": 18
+        },
+        {
+          "kind": "slider",
+          "name": "Volume",
+          "rect": [
+            0,
+            44,
+            296,
+            45
+          ]
+        },
+        {
+          "kind": "button",
+          "name": "Mute",
+          "rect": [
+            0,
+            100,
+            296,
+            50
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Power",
+      "description": "On and Off buttons that fit a 300M",
+      "size": [
+        296,
+        64
+      ],
+      "items": [
+        {
+          "kind": "button",
+          "name": "Power on",
+          "rect": [
+            0,
+            0,
+            140,
+            64
+          ],
+          "text": "On"
+        },
+        {
+          "kind": "button",
+          "name": "Power off",
+          "rect": [
+            156,
+            0,
+            140,
+            64
+          ],
+          "text": "Off"
+        }
+      ]
+    }
+  ]
+}

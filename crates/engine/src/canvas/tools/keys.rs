@@ -84,6 +84,11 @@ impl Session {
         if self.tool.busy() {
             return refuse("finish the drag first");
         }
+        // Enter with the Artboard tool adds a page right of everything on the canvas.
+        if tool == ToolId::Artboard {
+            self.tool.place_at = None;
+            return self.execute("extron.addPage", &serde_json::json!({})).map(|_| ());
+        }
         // The crosshair the arrows moved goes with the placement, which lands on it when no point
         // is given.
         let crosshair = self.crosshair();

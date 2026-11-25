@@ -37,6 +37,8 @@ icons! {
     Frame,
     Section,
     Slice,
+    /// A touch panel page (the Artboard tool): a screen with crop marks off two corners.
+    Artboard,
     Rectangle,
     Line,
     Arrow,

@@ -1,0 +1,12 @@
+# Project MCP servers for Codex. Codex loads this file only for a trusted project.
+# Build the CLI first: cargo build --locked --release -p figcraft-cli
+
+# Headless GUI Studio session: no window, one untitled document.
+[mcp_servers.gui-studio]
+command = "target/release/gui-studio-cli"
+args = ["mcp"]
+
+# Drives the running app. Start it with: gui-studio --control 7979
+[mcp_servers.gui-studio-app]
+command = "target/release/gui-studio-cli"
+args = ["mcp", "--attach", "7979"]

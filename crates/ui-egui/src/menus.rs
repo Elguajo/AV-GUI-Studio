@@ -35,6 +35,7 @@ pub const UI_COMMANDS: &[&str] = &[
     "plugin.import",
     "extron.exportExui",
     "extron.buildGdl",
+    "extron.kitsWindow",
     "file.open",
     "file.import",
     "file.placeImage",
@@ -95,7 +96,9 @@ pub fn invoke(app: &mut FigApp, id: &str) {
             app.run(id, json!({}));
         }
         "file.open" => app.open_dialog(),
-        "extron.demo" => crate::extron::demo(app),
+        "extron.demo" => crate::extron::open_new(app, id, json!({})),
+        "extron.newPanel" => crate::extron::open_new_project(app),
+        "extron.kitsWindow" => crate::extron::open_kits(app),
         "extron.validate" => crate::extron::validate(app),
         "extron.exportExui" | "extron.buildGdl" => crate::extron::save(app, id),
         // From the keyboard or a menu, typing goes on in the new sticky.

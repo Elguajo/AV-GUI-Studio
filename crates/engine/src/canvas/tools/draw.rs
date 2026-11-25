@@ -13,8 +13,16 @@ impl Session {
         if ds.text_edit.is_some() {
             textedit::end(self)?;
         }
-        // Frames drawn inside frames nest; sections only at the top or in sections.
+        // An artboard is a new page of the touch panel project the document already is.
+        if self.tool.tool == ToolId::Artboard
+            && let Err(why) = gui_studio_extron::panel_frame(&doc)
+        {
+            return Err(crate::EngineError::Other(format!("{why} The Artboard tool adds pages to it.")));
+        }
+        // Frames drawn inside frames nest; sections only at the top or in sections; artboards
+        // only at the top.
         let parent = match self.tool.tool {
+            ToolId::Artboard => page,
             ToolId::Section => {
                 frame_at(&doc, page, ev.p(), &[]).filter(|f| doc.node(*f).is_some_and(|n| matches!(n.kind, NodeKind::Section { .. }))).unwrap_or(page)
             }
@@ -28,6 +36,9 @@ impl Session {
 
     pub(super) fn draw_drag(&mut self, ev: &PointerEvent, start: Point, id: Option<NodeId>, parent: NodeId, targets: &Targets) -> Result<()> {
         let tool = self.tool.tool;
+        if tool == ToolId::Artboard {
+            return self.artboard_drag(ev, parent, targets);
+        }
         let mut p = ev.p();
         let mut guides = Vec::new();
         let pixel = self.ds().map(|d| d.view.snap_pixel).unwrap_or(true);
@@ -111,6 +122,30 @@ impl Session {
         })?;
         self.tool.overlay.guides = guides;
         self.tool.gesture = Gesture::Draw { start, id: created, parent, targets: targets.clone() };
+        Ok(())
+    }
+
+    /// The Artboard tool: a new page of the panel's size follows the pointer by its top-left corner
+    /// (snapped to whole pixels and to the other layers' edges) until the button comes up.
+    fn artboard_drag(&mut self, ev: &PointerEvent, parent: NodeId, targets: &Targets) -> Result<()> {
+        let mut p = ev.p();
+        let mut guides = Vec::new();
+        p = Point::new(p.x.round(), p.y.round());
+        if self.ds().map(|d| d.view.snap_objects).unwrap_or(true) && !ev.cmd && !ev.ctrl {
+            let (dx, dy, g) = targets.snap_point(p.x, p.y, SNAP_PX / ev.zoom.max(1e-6));
+            p = Point::new((p.x + dx).round(), (p.y + dy).round());
+            guides = g;
+        }
+        let mut created = None;
+        self.preview(|doc, sel| {
+            let at = Some([p.x as i32, p.y as i32]);
+            let id = gui_studio_extron::add_page(doc, gui_studio_extron::NewPage { name: None, at }).map_err(crate::EngineError::Other)?;
+            *sel = vec![id];
+            created = Some(id);
+            Ok(())
+        })?;
+        self.tool.overlay.guides = guides;
+        self.tool.gesture = Gesture::Draw { start: ev.p(), id: created, parent, targets: targets.clone() };
         Ok(())
     }
 

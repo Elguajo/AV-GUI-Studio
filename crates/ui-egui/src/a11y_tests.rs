@@ -184,8 +184,8 @@ fn arrows_and_enter_pick_a_toolbar_tool() {
     f6(&mut u, true);
     f6(&mut u, true);
     assert_eq!((region(&u), name(&u)), (Region::Toolbar, "Move".to_string()));
-    // Move, its flyout button, Frame, its flyout button, Rectangle.
-    for _ in 0..4 {
+    // Move, its flyout button, Frame, its flyout button, Artboard, Rectangle.
+    for _ in 0..5 {
         press(&mut u, Key::ArrowRight, Modifiers::NONE);
     }
     assert_eq!(name(&u), "Rectangle");
@@ -309,8 +309,8 @@ fn a_tool_flyout_opened_from_the_keyboard_picks_a_tool() {
     let (mut u, ..) = setup();
     f6(&mut u, true);
     f6(&mut u, true);
-    // Move, its flyout button, Frame, its flyout button, Rectangle, the shape tools' button.
-    for _ in 0..5 {
+    // Move, its flyout button, Frame, its flyout button, Artboard, Rectangle, the shape tools' button.
+    for _ in 0..6 {
         press(&mut u, Key::ArrowRight, Modifiers::NONE);
     }
     assert_eq!(name(&u), "Shape tools");

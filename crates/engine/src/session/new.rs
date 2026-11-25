@@ -28,6 +28,7 @@ impl Session {
             message: None,
             libraries: library::Cache::default(),
             plugins: plugins::Runtime::default(),
+            kits: crate::cmd::extron::KitStore::default(),
             live: live::Lives::default(),
             background: background::Background::default(),
             events: Arc::new(events::EventLog::default()),

@@ -180,6 +180,8 @@ pub fn left_panel(app: &mut FigApp, ui: &mut Ui) {
     ui.painter().line_segment([head.left_bottom(), head.right_bottom()], Stroke::new(1.0, t.border));
     match app.ui.left_tab {
         LeftTab::File => {
+            // Docked first, so the pages and layers take the height that's left above it.
+            crate::extron::section(app, ui);
             pages(app, ui);
             layers(app, ui);
         }

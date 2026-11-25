@@ -8,29 +8,30 @@ Phase 01 — TLP Pro 1025M editor, Figma interaction core and GDL export
 
 ## Completed this session
 
-- Moved the FigCraft-based editor into this repository as an independent product (ADR-003). The former `../gui-studio-fork` checkout is no longer the working copy. Tag `eframe-prototype` keeps the eframe prototype.
-- Fixed Extron text size units: canvas px, exported pt.
-- Built and ran the unmodified FigCraft baseline and the rebranded GUI Studio Windows app.
-- Ported the 1025M model, node metadata, diagnostics and EXUI writer to the fork, and added the registered desktop and CLI commands.
-- Completed [task-06-r1](../phases/01-1025m-editor.prompts.md#task-06-r1).
+- 2026-11-25 change request: a new project starts by choosing the touch panel (TLP Pro 1025M or 300M portrait), and the Artboard tool (Shift+O) and `extron.addPage` add pages. More than one page exports as an EXUI/5 project. Evidence is in the Phase 01 task list.
+- 2026-11-25 change request: UI kits. Aurora, Daylight and Graphite are built in, and others install from `gui-studio-kit/1` files. A project keeps a copy of its kit. Blocks insert ready-made groups of controls.
+- Reviewed the task-07 Problems panel work copied from the former fork checkout. Completed [task-07-r1](../phases/01-1025m-editor.prompts.md#task-07-r1).
+- An Extron screen lists every export problem under the layers. Activating a problem selects its layer, reveals it in Layers and brings it into view. Blocked exports name each layer and node.
+- The Warning severity and the page and popup rules moved to Phase 02, because they need pages and popups.
 
 ## Verification evidence
 
-- The Windows File menu and CLI exported the Aurora Meeting Room demo. Exporter 0.8.8 passed 182/182 checks. Both GDLs matched the original `Project::demo()` export byte-for-byte.
-- The saved design reopened and produced identical EXUI. The changed-package tests, targeted rechecks, Clippy, formatting, layers, assets and parity checks are recorded in task-06-r1.
+- 5 `gui-studio-extron` tests, 3 `extron_problems_tests` and the 28 i18n tests passed. Clippy with warnings denied and rustfmt passed for the three changed packages. The desktop window was not launched for a manual check.
 
 ## Current working state
 
-RUNNABLE / GREEN
+RUNNABLE / GREEN. Not committed.
 
 ## Blockers / uncertainty
 
-The uncommitted task-07 Problems panel work from the former fork checkout was copied into this working tree and is not committed. Review it here and continue task-07 in this repository.
+- The two-page 1025M and 300M GDLs passed the exporter's verifier but were not opened, verified or built in GUI Designer.
+- The task-07 changes are in the working tree and not committed.
+- The Rust toolchain and the MinGW and Cargo caches used for builds still live under `../gui-studio-fork/target` and `../figma-extron-exporter/output/rust-studio-toolchain`. Cargo is not on PATH. An environment script must set `RUSTUP_HOME`, `CARGO_HOME`, `PATH`, `LIBRARY_PATH` and `C_INCLUDE_PATH` to those locations before `cargo` runs. Deleting the fork checkout breaks local builds.
 
 ## Next action
 
-Show Extron validation findings in a Problems panel and select the affected layer when a finding is activated.
+Author Extron controls in the editor: commands for an empty 1025M panel and for inserting or assigning Button, Slider, Label and Shape, with IDs from a monotonic counter in the panel frame's `plugin_data`. See the Phase 01 task list.
 
 ## Active task prompt
 
-.progressive/phases/01-1025m-editor.prompts.md#task-07-r1
+None yet. Create task-08-r1 in `.progressive/phases/01-1025m-editor.prompts.md` for the control-authoring task.

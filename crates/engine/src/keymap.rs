@@ -182,6 +182,7 @@ pub static KEYS: &[Binding] = &[
     k(Tools, "tool.hand", &["H"]),
     k(Tools, "tool.frame", &["F", "A"]),
     k(Tools, "tool.section", &["Shift+S"]),
+    k(Tools, "tool.artboard", &["Shift+O"]),
     k(Tools, "tool.slice", &["S"]),
     k(Tools, "tool.rectangle", &["R"]),
     k(Tools, "tool.line", &["L"]),

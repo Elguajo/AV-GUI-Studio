@@ -115,6 +115,8 @@ mod export_name_tests;
 #[cfg(test)]
 mod export_preview_tests;
 #[cfg(test)]
+mod extron_problems_tests;
+#[cfg(test)]
 mod field_ellipsis_tests;
 #[cfg(test)]
 mod field_tests;
@@ -571,6 +573,12 @@ pub struct UiState {
     pub pending_open_frames: u8,
     /// The latest successful file import's summary and compatibility notes.
     pub import_report: Option<import_report::Report>,
+    /// The Extron Problems section under the layers: the open document's export diagnostics.
+    pub(crate) problems: extron::Problems,
+    /// The New touch panel project dialog, while it is open.
+    pub(crate) new_project: Option<extron::NewProject>,
+    /// The UI kits window, while it is open.
+    pub(crate) kits_window: Option<extron::KitsWindow>,
     /// Files the user opened whose fonts are yet to be checked (by document uid).
     pub font_checks: Vec<u64>,
     pub missing_fonts: Option<missing_fonts::Shown>,
@@ -745,6 +753,9 @@ impl Default for UiState {
             pending_opens: Vec::new(),
             pending_open_frames: 0,
             import_report: None,
+            problems: extron::Problems::default(),
+            new_project: None,
+            kits_window: None,
             font_checks: Vec::new(),
             missing_fonts: None,
             sampled_color: None,

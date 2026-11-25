@@ -1,66 +1,107 @@
-//! Adapt editable design nodes to the single-screen EXUI model.
+//! Adapt editable design nodes to the EXUI model: every panel artboard on the design page is a page.
 
 use figcraft_color::{BlendMode, PaintKind};
 use figcraft_doc::{Document, Node, NodeId, NodeKind, TextAlignH, TextAlignV, TextData};
 
 use crate::metadata::{KEY, Kind, Metadata};
-use crate::model::{ButtonState, Color, Control, Diagnostic, Element, HEIGHT, PROFILE, Project, StateRole, WIDTH};
+use crate::model::{ButtonState, Color, Control, Diagnostic, Element, Page, Profile, Project, StateRole, profile};
 
 pub fn project(doc: &Document) -> Result<Project, Vec<Diagnostic>> {
     let root = doc.current_page.or_else(|| doc.pages.first().copied()).unwrap_or(NodeId(0));
-    let error = |message: &str| vec![Diagnostic::error(root, message)];
+    let page_name = doc.node(root).map(|page| page.name.as_str()).unwrap_or_default();
+    let error = |message: &str| vec![Diagnostic::error(root, page_name, message)];
     if doc.pages.len() != 1 {
         return Err(error("Extron export requires one design page."));
     }
     let page = doc.node(root).ok_or_else(|| error("The design page is missing."))?;
-    let mut frames = page.children.iter().filter_map(|id| doc.node(*id)).filter(|node| node.plugin_data.contains_key(KEY));
-    let frame = frames.next().filter(|_| frames.next().is_none()).ok_or_else(|| error("The design page needs one Extron panel frame."))?;
-    let (mut project, mut diagnostics) = read_frame(frame).map_err(|message| vec![Diagnostic::error(frame.id, message)])?;
+    let frames: Vec<&Node> = page.children.iter().filter_map(|id| doc.node(*id)).filter(|node| node.plugin_data.contains_key(KEY)).collect();
+    if frames.is_empty() {
+        return Err(error("The design page needs an Extron panel frame."));
+    }
+    let mut diagnostics = Vec::new();
+    let mut pages = Vec::new();
     let mut component_sets = Vec::new();
-    for id in &frame.children {
-        let Some(node) = doc.node(*id) else {
-            diagnostics.push(Diagnostic::error(frame.id, "A panel layer is missing."));
-            continue;
-        };
-        match read_element(doc, node) {
-            Ok((item, variants)) => {
-                project.elements.push(item);
-                component_sets.extend(variants);
+    for frame in &frames {
+        let (mut screen, data) = match read_frame(frame) {
+            Ok((screen, data, problems)) => {
+                diagnostics.extend(problems);
+                (screen, data)
             }
-            Err(message) => diagnostics.push(Diagnostic::error(node.id, format!("{} — {message}", node.name))),
+            Err(message) => {
+                diagnostics.push(Diagnostic::error(frame.id, &frame.name, message));
+                continue;
+            }
+        };
+        for id in &frame.children {
+            let Some(node) = doc.node(*id) else {
+                diagnostics.push(Diagnostic::error(frame.id, &frame.name, "A panel layer is missing."));
+                continue;
+            };
+            match read_element(doc, node) {
+                Ok((item, variants)) => {
+                    screen.elements.push(item);
+                    component_sets.extend(variants);
+                }
+                Err(message) => diagnostics.push(Diagnostic::error(node.id, &node.name, message)),
+            }
+        }
+        pages.push((screen, data));
+    }
+    let panels: Vec<NodeId> = frames.iter().map(|frame| frame.id).collect();
+    for node in page.children.iter().filter(|id| !panels.contains(id) && !component_sets.contains(id)).filter_map(|id| doc.node(*id)) {
+        diagnostics.push(Diagnostic::error(
+            node.id,
+            &node.name,
+            "Only Extron panel artboards and their button component sets may be top-level layers.",
+        ));
+    }
+    // The start page is the one with the lowest Object ID (the first panel of the project); the
+    // others follow in layer order. Every page shares its panel model and project name.
+    let Some(start) = (0..pages.len()).min_by_key(|i| pages[*i].0.identity.object_id) else {
+        return Err(diagnostics);
+    };
+    let (first, (panel, name)) = pages.remove(start);
+    pages.insert(0, (first, (panel, name.clone())));
+    for (screen, (other, _)) in pages.iter().skip(1) {
+        if other.id != panel.id {
+            diagnostics.push(Diagnostic::error(
+                screen.node,
+                &screen.name,
+                format!("Every page needs the project's panel, {}. This one is a {}.", panel.name, other.name),
+            ));
         }
     }
-    for id in page.children.iter().filter(|id| **id != frame.id && !component_sets.contains(id)) {
-        diagnostics.push(Diagnostic::error(*id, "Only the Extron panel and its button component sets may be top-level layers."));
-    }
+    let project = Project { name, profile: panel, pages: pages.into_iter().map(|(screen, _)| screen).collect() };
     diagnostics.extend(project.diagnostics());
     if diagnostics.is_empty() { Ok(project) } else { Err(diagnostics) }
 }
 
-fn read_frame(frame: &Node) -> Result<(Project, Vec<Diagnostic>), String> {
+/// Whether `doc` carries Extron assignments, so its export problems are worth showing.
+pub fn is_screen(doc: &Document) -> bool {
+    doc.nodes().any(|node| node.plugin_data.contains_key(KEY))
+}
+
+/// A page's touch panel model and the project name it carries.
+type Target = (&'static Profile, String);
+
+/// A panel artboard as an empty page, with its panel model and project name.
+fn read_frame(frame: &Node) -> Result<(Page, Target, Vec<Diagnostic>), String> {
     let data = Metadata::read(frame)?;
-    if data.kind != Kind::Page || data.profile.as_deref() != Some(PROFILE) || !matches!(frame.kind, NodeKind::Frame) {
-        return Err("The Extron panel must be a frame assigned to TLP Pro 1025M.".into());
-    }
-    if frame.width != f64::from(WIDTH) || frame.height != f64::from(HEIGHT) {
-        return Err("The Extron panel frame must be 1280 × 800.".into());
+    let panel = data.profile.as_deref().and_then(profile);
+    let Some(panel) = panel.filter(|_| data.kind == Kind::Page && matches!(frame.kind, NodeKind::Frame)) else {
+        return Err("The Extron panel must be a frame assigned to a supported touch panel.".into());
+    };
+    if frame.width != f64::from(panel.width) || frame.height != f64::from(panel.height) {
+        return Err(format!("The {} panel frame must be {} × {}.", panel.name, panel.width, panel.height));
     }
     appearance(frame)?;
     let mut diagnostics = Vec::new();
     if frame.transform.as_coeffs()[..4] != [1.0, 0.0, 0.0, 1.0] {
-        diagnostics.push(Diagnostic::error(frame.id, "The panel frame cannot be rotated, scaled or skewed."));
+        diagnostics.push(Diagnostic::error(frame.id, &frame.name, "The panel frame cannot be rotated, scaled or skewed."));
     }
-    Ok((
-        Project {
-            page: frame.id,
-            name: data.project_name.clone().ok_or("Missing Extron project name.")?,
-            page_name: frame.name.clone(),
-            identity: data.identity()?,
-            background: solid(frame)?,
-            elements: Vec::new(),
-        },
-        diagnostics,
-    ))
+    let name = data.project_name.clone().ok_or("Missing Extron project name.")?;
+    let page = Page { node: frame.id, name: frame.name.clone(), identity: data.identity()?, background: solid(frame)?, elements: Vec::new() };
+    Ok((page, (panel, name), diagnostics))
 }
 
 fn read_element(doc: &Document, node: &Node) -> Result<(Element, Option<NodeId>), String> {
@@ -118,7 +159,8 @@ fn bounds(node: &Node) -> Result<[i32; 4], String> {
         return Err("Rotated, scaled or skewed layers cannot be exported as native controls.".into());
     }
     let rect = [x, y, node.width, node.height];
-    if !rect.iter().all(|v| v.is_finite() && (0.0..=f64::from(i32::MAX)).contains(v)) {
+    // Within the integer range: the screen check then names the 1280 × 800 bounds a layer leaves.
+    if !rect.iter().all(|v| v.is_finite() && (f64::from(i32::MIN)..=f64::from(i32::MAX)).contains(v)) {
         return Err("Layer geometry is outside its container.".into());
     }
     Ok(rect.map(|v| v.round() as i32))
