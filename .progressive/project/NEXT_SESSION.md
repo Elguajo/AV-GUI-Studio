@@ -32,8 +32,8 @@ RUNNABLE / GREEN for the vendored build and the checks above. Dot-source `script
 
 ## Next action
 
-Try the Windows desktop build by hand, including Build GDL.
+Recheck the saved Pencil import task against the Phase 01 plan and the current checkout.
 
 ## Active task prompt
 
-NONE
+`.progressive/phases/01-1025m-editor.prompts.md#task-04-r1`
