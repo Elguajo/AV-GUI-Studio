@@ -155,3 +155,27 @@ fn the_ui_kits_window_inserts_blocks_and_switches_the_projects_kit() {
     assert!(block.is_some(), "{names:?} is a block of the kit");
     assert!(u.app.ui.kits_window.is_some(), "the window stays open for more");
 }
+
+#[test]
+fn the_layer_list_stops_above_the_problems_section() {
+    let (mut u, title) = demo();
+    // Expanding Home makes the list longer than the panel, so its rows reach the section.
+    u.app.run("select.set", json!({"ids": [title]}));
+    settle(&mut u);
+    // With no problems, and with one, the list is shorter than a scroll area's default minimum
+    // height. The section must still reserve all it draws: a layer row that ran under the header
+    // would take the click meant for it.
+    let header = node(&mut u, "Problems: 0").unwrap();
+    click(&mut u, header);
+    assert!(u.app.ui.problems.collapsed, "the header with no problems collapses the section");
+    // Collapsed, the section is only its header, lower down.
+    let header = node(&mut u, "Problems: 0").unwrap();
+    click(&mut u, header);
+    assert!(!u.app.ui.problems.collapsed);
+    u.app.run("node.set", json!({"ids": [title], "props": {"x": -10}}));
+    settle(&mut u);
+    let header = node(&mut u, "Problems: 1").unwrap();
+    click(&mut u, header);
+    assert!(u.app.ui.problems.collapsed, "the header with one problem collapses the section");
+    assert_eq!(u.app.session.ds().unwrap().selection, [title]);
+}

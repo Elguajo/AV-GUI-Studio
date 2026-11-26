@@ -171,6 +171,9 @@ pub(crate) fn section(app: &mut FigApp, ui: &mut Ui) {
     let sel = app.session.ds().map(|ds| ds.selection.clone()).unwrap_or_default();
     let mut activated = None;
     egui::Panel::bottom("extron_problems").resizable(false).exact_size(HEADER + list_h).frame(egui::Frame::NONE).show(ui, |ui| {
+        // The contents must take exactly HEADER + list_h: a panel whose contents overflow
+        // reserves less than it draws, and the layers above then run under the header.
+        ui.spacing_mut().item_spacing.y = 0.0;
         let rtl = crate::widgets::rtl(ui);
         let (head, resp) = ui.allocate_exact_size(vec2(w, HEADER), Sense::click());
         let fx = |x: f32| crate::widgets::flip_x(rtl, head, x);
@@ -188,32 +191,35 @@ pub(crate) fn section(app: &mut FigApp, ui: &mut Ui) {
         if !open {
             return;
         }
-        egui::ScrollArea::vertical().id_salt("extron_problems_rows").max_height(list_h).auto_shrink([false, false]).show(ui, |ui| {
-            if rows.is_empty() {
-                let (r, _) = ui.allocate_exact_size(vec2(w, 32.0), Sense::hover());
-                let none = tr("No problems. The screen is ready for Extron export.");
-                ui.painter().text(pos2(fx(r.min.x + 16.0), r.center().y), start, none, regular(11.0), t.text_secondary);
-                return;
-            }
-            for (p, galleys) in app.ui.problems.items.iter().zip(&rows) {
-                let (r, resp) = ui.allocate_exact_size(vec2(w, row_h(galleys)), Sense::click());
-                if sel.contains(&p.node) {
-                    ui.painter().rect_filled(r, CornerRadius::ZERO, t.selected_row);
-                } else if resp.hovered() {
-                    ui.painter().rect_filled(r, CornerRadius::ZERO, t.hover);
+        egui::ScrollArea::vertical().id_salt("extron_problems_rows").max_height(list_h).min_scrolled_height(list_h).auto_shrink([false, false]).show(
+            ui,
+            |ui| {
+                if rows.is_empty() {
+                    let (r, _) = ui.allocate_exact_size(vec2(w, 32.0), Sense::hover());
+                    let none = tr("No problems. The screen is ready for Extron export.");
+                    ui.painter().text(pos2(fx(r.min.x + 16.0), r.center().y), start, none, regular(11.0), t.text_secondary);
+                    return;
                 }
-                let (name, message) = galleys;
-                let text_x = |g: &Galley| if rtl { r.max.x - 32.0 - g.size().x } else { r.min.x + 32.0 };
-                let dot = pos2(fx(r.min.x + 20.0), r.min.y + 6.0 + name.size().y / 2.0);
-                ui.painter().circle_filled(dot, 3.5, if p.error { t.danger } else { t.warning });
-                ui.painter().galley(pos2(text_x(name), r.min.y + 6.0), name.clone(), t.text);
-                ui.painter().galley(pos2(text_x(message), r.min.y + 8.0 + name.size().y), message.clone(), t.text_secondary);
-                a11y::named_button(&resp, &p.label());
-                if resp.clicked() {
-                    activated = Some(p.node);
+                for (p, galleys) in app.ui.problems.items.iter().zip(&rows) {
+                    let (r, resp) = ui.allocate_exact_size(vec2(w, row_h(galleys)), Sense::click());
+                    if sel.contains(&p.node) {
+                        ui.painter().rect_filled(r, CornerRadius::ZERO, t.selected_row);
+                    } else if resp.hovered() {
+                        ui.painter().rect_filled(r, CornerRadius::ZERO, t.hover);
+                    }
+                    let (name, message) = galleys;
+                    let text_x = |g: &Galley| if rtl { r.max.x - 32.0 - g.size().x } else { r.min.x + 32.0 };
+                    let dot = pos2(fx(r.min.x + 20.0), r.min.y + 6.0 + name.size().y / 2.0);
+                    ui.painter().circle_filled(dot, 3.5, if p.error { t.danger } else { t.warning });
+                    ui.painter().galley(pos2(text_x(name), r.min.y + 6.0), name.clone(), t.text);
+                    ui.painter().galley(pos2(text_x(message), r.min.y + 8.0 + name.size().y), message.clone(), t.text_secondary);
+                    a11y::named_button(&resp, &p.label());
+                    if resp.clicked() {
+                        activated = Some(p.node);
+                    }
                 }
-            }
-        });
+            },
+        );
     });
     if let Some(node) = activated {
         reveal(app, node);
