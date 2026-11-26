@@ -1,7 +1,7 @@
 //! Editable Aurora Meeting Room example, with the original GUI Studio Object and Control IDs.
 
 use figcraft_color::{Color as CanvasColor, Paint};
-use figcraft_doc::{Document, Node, NodeId, NodeKind, TextAlignH, TextAlignV, TextAutoResize, TextData};
+use figcraft_doc::{Constraints, Document, HConstraint, Node, NodeId, NodeKind, TextAlignH, TextAlignV, TextAutoResize, TextData, VConstraint};
 use figcraft_geom::Affine;
 
 use crate::adapter::PX_PER_PT;
@@ -108,8 +108,28 @@ pub(crate) struct ButtonVariants<'a> {
 }
 
 pub(crate) fn button(doc: &mut Document, root: NodeId, variants: ButtonVariants<'_>) -> Result<Node, String> {
-    let ButtonVariants { name, rect, states, size, at: [x, y] } = variants;
+    let ButtonVariants { name, rect, states, size, at } = variants;
     let [_, _, w, h] = rect;
+    let normal = states[0].fill;
+    let (_, component) = button_set(doc, root, name, [w, h], states, size, at)?;
+    let mut layer = node(doc, NodeKind::Instance { component, props: Default::default() }, name, rect);
+    layer.source = Some(component);
+    fill(&mut layer, normal);
+    Ok(layer)
+}
+
+/// A button's variant set named `name` at `at` on the page `root`: one `w` × `h` variant per
+/// state, in role order, each with a caption that stretches with the button. Returns the set and
+/// its Normal variant.
+pub(crate) fn button_set(
+    doc: &mut Document,
+    root: NodeId,
+    name: &str,
+    [w, h]: [i32; 2],
+    states: [crate::model::ButtonState; 3],
+    size: u8,
+    [x, y]: [i32; 2],
+) -> Result<(NodeId, NodeId), String> {
     let set = node(doc, NodeKind::ComponentSet { description: String::new() }, name, [x, y, 3 * (w + 12), h + 24]);
     let set_id = insert(doc, set, root)?;
     let mut first = None;
@@ -124,29 +144,35 @@ pub(crate) fn button(doc: &mut Document, root: NodeId, variants: ButtonVariants<
         data.state_name = Some(state.name);
         assign(&mut layer, &data)?;
         let id = insert(doc, layer, set_id)?;
-        first.get_or_insert((id, state.fill));
-        let caption = text_layer(doc, "Caption", [0, 0, w, h], state.text, state.color, size, TextAlignH::Center);
+        first.get_or_insert(id);
+        let mut caption = text_layer(doc, "Caption", [0, 0, w, h], state.text, state.color, size, TextAlignH::Center);
+        caption.constraints = Constraints { horizontal: HConstraint::LeftRight, vertical: VConstraint::TopBottom };
         insert(doc, caption, id)?;
     }
-    let (component, color) = first.ok_or("Missing Normal variant.")?;
-    let mut layer = node(doc, NodeKind::Instance { component, props: Default::default() }, name, rect);
-    layer.source = Some(component);
-    fill(&mut layer, color);
-    Ok(layer)
+    Ok((set_id, first.ok_or("Missing Normal variant.")?))
 }
 
+/// The track, fill and thumb of a slider in `id`. When the slider is resized the track stretches,
+/// the fill scales and the thumb stays centred.
 pub(crate) fn slider(doc: &mut Document, id: NodeId, rect: [i32; 4], colors: [Color; 3]) -> Result<(), String> {
     let [_, _, w, h] = rect;
     let track_y = (h - 12) / 2;
     let parts = [
-        ("Track", NodeKind::Rectangle, [0, track_y, w, 12], 6.0),
-        ("Fill", NodeKind::Rectangle, [0, track_y, w / 2, 12], 6.0),
-        ("Thumb", NodeKind::Ellipse { start: 0.0, sweep: std::f64::consts::TAU, inner: 0.0 }, [(w - 26) / 2, (h - 26) / 2, 26, 26], 0.0),
+        ("Track", NodeKind::Rectangle, [0, track_y, w, 12], 6.0, HConstraint::LeftRight),
+        ("Fill", NodeKind::Rectangle, [0, track_y, w / 2, 12], 6.0, HConstraint::Scale),
+        (
+            "Thumb",
+            NodeKind::Ellipse { start: 0.0, sweep: std::f64::consts::TAU, inner: 0.0 },
+            [(w - 26) / 2, (h - 26) / 2, 26, 26],
+            0.0,
+            HConstraint::Center,
+        ),
     ];
-    for ((name, kind, rect, radius), color) in parts.into_iter().zip(colors) {
+    for ((name, kind, rect, radius, horizontal), color) in parts.into_iter().zip(colors) {
         let mut layer = node(doc, kind, name, rect);
         fill(&mut layer, color);
         layer.corners.radii = [radius; 4];
+        layer.constraints = Constraints { horizontal, vertical: VConstraint::Center };
         insert(doc, layer, id)?;
     }
     Ok(())

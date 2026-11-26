@@ -4,8 +4,11 @@ use crate::demo::{self as parts, INK};
 use crate::model::{Color, Control, StateRole};
 use crate::{ControlKind, DEFAULT_PROFILE, Insert, Kit, NEXT_ID_KEY, assign, demo, insert, panel, panel_frame, project};
 
+/// The editor's component sync, which builds the instances of masters.
+const SYNC: crate::SyncInstance = figcraft_engine::components::sync_instance;
+
 fn add(doc: &mut Document, kind: ControlKind) -> crate::Assigned {
-    insert(doc, kind, Insert::default()).unwrap()
+    insert(doc, kind, Insert::default(), SYNC).unwrap()
 }
 
 #[test]
@@ -14,10 +17,13 @@ fn a_new_panel_takes_every_control_with_presets_and_exports() {
     let errors = project(&doc).unwrap_err();
     assert_eq!(errors[0].message, "A screen needs 1–64 elements.");
 
-    let card = insert(&mut doc, ControlKind::Shape, Insert { name: Some("Card".into()), x: Some(40), y: Some(60), ..Insert::default() }).unwrap();
+    let card =
+        insert(&mut doc, ControlKind::Shape, Insert { name: Some("Card".into()), x: Some(40), y: Some(60), ..Insert::default() }, SYNC).unwrap();
     let title =
-        insert(&mut doc, ControlKind::Label, Insert { text: Some("Huddle Room".into()), x: Some(60), y: Some(80), ..Insert::default() }).unwrap();
-    let mute = insert(&mut doc, ControlKind::Button, Insert { name: Some("Mute".into()), text: Some("Mute".into()), ..Insert::default() }).unwrap();
+        insert(&mut doc, ControlKind::Label, Insert { text: Some("Huddle Room".into()), x: Some(60), y: Some(80), ..Insert::default() }, SYNC)
+            .unwrap();
+    let mute =
+        insert(&mut doc, ControlKind::Button, Insert { name: Some("Mute".into()), text: Some("Mute".into()), ..Insert::default() }, SYNC).unwrap();
     let volume = add(&mut doc, ControlKind::Slider);
 
     assert_eq!([card.object_id, title.object_id, mute.object_id, volume.object_id], [101, 102, 103, 104]);
@@ -58,7 +64,7 @@ fn ids_of_deleted_controls_are_never_handed_out_again() {
 fn assigning_keeps_a_controls_ids_and_renews_a_copys() {
     let mut doc = panel("Huddle Room", DEFAULT_PROFILE, &Kit::default_kit().unwrap()).unwrap();
     let frame = panel_frame(&doc).unwrap();
-    let title = insert(&mut doc, ControlKind::Label, Insert { x: Some(60), y: Some(80), ..Insert::default() }).unwrap();
+    let title = insert(&mut doc, ControlKind::Label, Insert { x: Some(60), y: Some(80), ..Insert::default() }, SYNC).unwrap();
     assert_eq!(assign(&mut doc, title.node, ControlKind::Label).unwrap(), title);
 
     let copy = doc.duplicate_into(title.node, frame, None).unwrap();
@@ -123,7 +129,7 @@ fn refuses_layers_outside_the_panel_wrong_layer_types_and_pages_without_a_panel(
 }
 
 fn add_err(doc: &mut Document) -> String {
-    insert(doc, ControlKind::Label, Insert::default()).unwrap_err()
+    insert(doc, ControlKind::Label, Insert::default(), SYNC).unwrap_err()
 }
 
 fn screen_json(doc: &Document) -> serde_json::Value {
@@ -146,7 +152,7 @@ fn added_pages_share_the_panel_and_one_id_counter_and_export_as_a_project() {
     assert_eq!(panel_frame(&doc).unwrap(), home);
 
     // A control goes to the page asked for, with an ID above the new page's own.
-    let mute = insert(&mut doc, ControlKind::Button, Insert { panel: Some(audio), text: Some("Mute".into()), ..Insert::default() }).unwrap();
+    let mute = insert(&mut doc, ControlKind::Button, Insert { panel: Some(audio), text: Some("Mute".into()), ..Insert::default() }, SYNC).unwrap();
     assert_eq!(mute.object_id, 103);
     assert_eq!(crate::panel_of(&doc, mute.node), Some(audio));
     assert_eq!(doc.node(home).unwrap().plugin_data[NEXT_ID_KEY], "104");
@@ -164,10 +170,8 @@ fn added_pages_share_the_panel_and_one_id_counter_and_export_as_a_project() {
     // Removing the page keeps its IDs retired; a page name must be unique.
     doc.remove(audio).unwrap();
     assert_eq!(add(&mut doc, ControlKind::Shape).object_id, 104);
-    // Mute's variant set stays on the canvas until it is removed too.
-    let set = doc.nodes().find(|n| matches!(n.kind, NodeKind::ComponentSet { .. })).unwrap().id;
-    assert_eq!(project(&doc).unwrap_err()[0].node_id, set);
-    doc.remove(set).unwrap();
+    // The button master stays on the canvas for the next button and doesn't block export.
+    assert!(doc.nodes().any(|n| matches!(n.kind, NodeKind::ComponentSet { .. }) && n.plugin_data.contains_key(crate::MASTER_KEY)));
     assert!(screen_json(&doc).get("page").is_some());
     let named = crate::add_page(&mut doc, crate::NewPage { name: Some("Audio".into()), at: Some([0, 1000]) }).unwrap();
     assert_eq!(doc.node(named).unwrap().transform.as_coeffs()[4..], [0.0, 1000.0]);
@@ -185,11 +189,11 @@ fn a_300m_project_uses_its_portrait_resolution_everywhere() {
     let mut doc = panel("Lectern", portrait, &Kit::default_kit().unwrap()).unwrap();
     let home = panel_frame(&doc).unwrap();
     assert_eq!((doc.node(home).unwrap().width, doc.node(home).unwrap().height), (320.0, 480.0));
-    let mute = insert(&mut doc, ControlKind::Button, Insert { text: Some("Mute".into()), ..Insert::default() }).unwrap();
+    let mute = insert(&mut doc, ControlKind::Button, Insert { text: Some("Mute".into()), ..Insert::default() }, SYNC).unwrap();
     let volume = add(&mut doc, ControlKind::Slider);
     let page = crate::add_page(&mut doc, crate::NewPage::default()).unwrap();
     assert_eq!(doc.node(page).unwrap().width, 320.0);
-    insert(&mut doc, ControlKind::Shape, Insert { panel: Some(page), ..Insert::default() }).unwrap();
+    insert(&mut doc, ControlKind::Shape, Insert { panel: Some(page), ..Insert::default() }, SYNC).unwrap();
 
     let screen = project(&doc).unwrap();
     assert_eq!(screen.profile.id, "tlp-pro-300m-portrait");
@@ -220,7 +224,7 @@ fn the_built_in_kits_are_valid_and_aurora_keeps_the_original_presets() {
     // the demo's: a 21 pt Mute caption on #213D45 with mint feedback.
     let mut doc = demo().unwrap();
     assert_eq!(crate::project_kit(&doc).unwrap(), Kit::default_kit().unwrap());
-    let mute = insert(&mut doc, ControlKind::Button, Insert { text: Some("Mute".into()), ..Insert::default() }).unwrap();
+    let mute = insert(&mut doc, ControlKind::Button, Insert { text: Some("Mute".into()), ..Insert::default() }, SYNC).unwrap();
     let screen = project(&doc).unwrap();
     let item = screen.pages[0].elements.iter().find(|e| e.node == mute.node).unwrap();
     let Control::Button { states, size } = &item.control else { panic!("a button") };
@@ -236,7 +240,7 @@ fn a_projects_kit_styles_its_pages_controls_and_blocks() {
     let page = crate::add_page(&mut doc, crate::NewPage::default()).unwrap();
     assert_eq!(doc.node(page).unwrap().plugin_data[crate::KIT_KEY], doc.node(home).unwrap().plugin_data[crate::KIT_KEY]);
 
-    let placed = crate::insert_block(&mut doc, &daylight, "Source selection", Some(page), None).unwrap();
+    let placed = crate::insert_block(&mut doc, &daylight, "Source selection", Some(page), None, SYNC).unwrap();
     assert_eq!(placed.len(), 6);
     assert_eq!(placed.iter().map(|a| a.object_id).collect::<Vec<_>>(), [102, 103, 104, 105, 106, 107]);
     let card = add(&mut doc, ControlKind::Shape); // on the start page
@@ -270,10 +274,10 @@ fn a_block_has_to_fit_the_page() {
     let portrait = crate::profile("tlp-pro-300m-portrait").unwrap();
     let aurora = Kit::default_kit().unwrap();
     let mut doc = panel("Lectern", portrait, &aurora).unwrap();
-    let error = crate::insert_block(&mut doc, &aurora, "Source selection", None, None).unwrap_err();
+    let error = crate::insert_block(&mut doc, &aurora, "Source selection", None, None, SYNC).unwrap_err();
     assert_eq!(error, "\"Source selection\" is 704 × 348 and does not fit the 320 × 480 page.");
-    assert!(crate::insert_block(&mut doc, &aurora, "Nothing", None, None).unwrap_err().contains("has no block \"Nothing\""));
-    let volume = crate::insert_block(&mut doc, &aurora, "Volume", None, Some([12, 300])).unwrap();
+    assert!(crate::insert_block(&mut doc, &aurora, "Nothing", None, None, SYNC).unwrap_err().contains("has no block \"Nothing\""));
+    let volume = crate::insert_block(&mut doc, &aurora, "Volume", None, Some([12, 300]), SYNC).unwrap();
     assert_eq!(volume.len(), 3);
     let screen = project(&doc).unwrap();
     assert_eq!(screen.pages[0].elements[1].bounds, [12, 344, 296, 45]);
@@ -299,4 +303,112 @@ fn a_kit_file_is_checked_before_it_is_used() {
     let kind = parse(&|v| v["blocks"][0]["items"][0]["kind"] = "dial".into()).unwrap_err();
     assert!(kind.contains("\"dial\" is not a control kind"), "{kind}");
     assert!(Kit::parse(&vec![b' '; 300 * 1024]).unwrap_err().contains("256 KiB"));
+}
+
+/// The master marked `tag` (such as `button:aurora`) on the canvas page.
+fn master(doc: &Document, tag: &str) -> NodeId {
+    let found: Vec<_> = doc.nodes().filter(|n| n.plugin_data.get(crate::MASTER_KEY).map(String::as_str) == Some(tag)).map(|n| n.id).collect();
+    assert_eq!(found.len(), 1, "one {tag} master");
+    found[0]
+}
+
+fn button_states(doc: &Document, node: NodeId) -> [crate::model::ButtonState; 3] {
+    let screen = project(doc).unwrap();
+    let item = screen.pages.iter().flat_map(|p| &p.elements).find(|e| e.node == node).unwrap();
+    let Control::Button { states, .. } = &item.control else { panic!("a button") };
+    states.clone()
+}
+
+#[test]
+fn buttons_and_sliders_are_instances_of_one_master_that_restyles_them_all() {
+    let mut doc = panel("Huddle Room", DEFAULT_PROFILE, &Kit::default_kit().unwrap()).unwrap();
+    let button = |doc: &mut Document, text: &str, x: i32, size: Option<[i32; 2]>| {
+        insert(
+            doc,
+            ControlKind::Button,
+            Insert { name: Some(text.into()), text: Some(text.into()), x: Some(x), y: Some(100), size, ..Insert::default() },
+            SYNC,
+        )
+        .unwrap()
+    };
+    let hdmi = button(&mut doc, "HDMI", 40, None);
+    let usb = button(&mut doc, "USB-C", 260, None);
+    let mute = button(&mut doc, "Mute", 480, Some([363, 62]));
+    let plain = button(&mut doc, "Button", 880, None);
+    let volume = add(&mut doc, ControlKind::Slider);
+    let wide = insert(&mut doc, ControlKind::Slider, Insert { y: Some(600), size: Some([500, 48]), ..Insert::default() }, SYNC).unwrap();
+
+    // One master per kind beside the panel; every control is an instance of it.
+    let set = master(&doc, "button:aurora");
+    let slider = master(&doc, "slider:aurora");
+    let normal = doc.node(set).unwrap().children[0];
+    for (item, main) in [(&hdmi, normal), (&usb, normal), (&mute, normal), (&plain, normal), (&volume, slider), (&wide, slider)] {
+        let NodeKind::Instance { component, .. } = doc.node(item.node).unwrap().kind else { panic!("an instance") };
+        assert_eq!(component, main);
+    }
+    assert!(doc.node(set).unwrap().transform.as_coeffs()[4] >= 1280.0, "the master sits beside the panel");
+    // The caption is the instance's own and names every state; the master's needs no override.
+    assert_eq!(button_states(&doc, mute.node).each_ref().map(|s| s.text.as_str()), ["Mute"; 3]);
+    assert!(doc.node(doc.node(plain.node).unwrap().children[0]).unwrap().overrides.is_empty());
+    // A size of its own stretches the caption with it.
+    let mute_layer = doc.node(mute.node).unwrap();
+    assert_eq!((mute_layer.width, mute_layer.height, mute_layer.overrides.contains("size")), (363.0, 62.0, true));
+    assert_eq!(doc.node(mute_layer.children[0]).unwrap().width, 363.0);
+    let ids = [hdmi.object_id, usb.object_id, mute.object_id, plain.object_id, volume.object_id, wide.object_id];
+
+    // Restyle the masters: every button and slider follows, with its caption, size and IDs.
+    parts::fill(doc.node_mut(normal).unwrap(), Color([200, 40, 40]));
+    let thumb = doc.node(slider).unwrap().children[2];
+    parts::fill(doc.node_mut(thumb).unwrap(), Color([250, 250, 0]));
+    for item in [&hdmi, &usb, &mute, &plain, &volume, &wide] {
+        SYNC(&mut doc, item.node);
+    }
+    for (item, text) in [(&hdmi, "HDMI"), (&usb, "USB-C"), (&mute, "Mute"), (&plain, "Button")] {
+        let states = button_states(&doc, item.node);
+        assert_eq!((states[0].fill, states[0].text.as_str(), states[1].text.as_str()), (Color([200, 40, 40]), text, text));
+    }
+    assert_eq!(doc.node(mute.node).unwrap().width, 363.0);
+    let screen = project(&doc).unwrap();
+    for item in [&volume, &wide] {
+        let element = screen.pages[0].elements.iter().find(|e| e.node == item.node).unwrap();
+        let Control::Slider { thumb, .. } = element.control else { panic!("a slider") };
+        assert_eq!(thumb, Color([250, 250, 0]));
+    }
+    let after: Vec<_> = screen.pages[0].elements.iter().map(|e| e.identity.object_id).collect();
+    assert_eq!(after, ids);
+}
+
+#[test]
+fn a_problem_in_a_master_is_reported_once_at_the_master() {
+    let mut doc = panel("Huddle Room", DEFAULT_PROFILE, &Kit::default_kit().unwrap()).unwrap();
+    let buttons: Vec<_> = [40, 260, 480]
+        .into_iter()
+        .map(|x| insert(&mut doc, ControlKind::Button, Insert { x: Some(x), ..Insert::default() }, SYNC).unwrap().node)
+        .collect();
+    let set = master(&doc, "button:aurora");
+    let pressed = doc.node(set).unwrap().children[2];
+    doc.node_mut(pressed).unwrap().opacity = 0.5;
+    let errors = project(&doc).unwrap_err();
+    let at_master: Vec<_> = errors.iter().filter(|e| e.node_id == pressed).collect();
+    assert_eq!(at_master.len(), 1, "{errors:?}");
+    assert_eq!(at_master[0].layer, "State=Pressed");
+    assert!(errors.iter().all(|e| !buttons.contains(&e.node_id)), "{errors:?}");
+    // The other kit's controls get their own master.
+    insert(&mut doc, ControlKind::Button, Insert { kit: Some(built_in("graphite")), ..Insert::default() }, SYNC).unwrap();
+    master(&doc, "button:graphite");
+}
+
+#[test]
+fn a_button_refuses_a_look_changed_on_the_instance() {
+    let mut doc = panel("Huddle Room", DEFAULT_PROFILE, &Kit::default_kit().unwrap()).unwrap();
+    let power = insert(&mut doc, ControlKind::Button, Insert { text: Some("Power".into()), ..Insert::default() }, SYNC).unwrap();
+    let caption = doc.node(power.node).unwrap().children[0];
+    let layer = doc.node_mut(caption).unwrap();
+    parts::fill(layer, INK);
+    layer.overrides.insert("fills".into());
+    let errors = project(&doc).unwrap_err();
+    assert_eq!(
+        (errors[0].node_id, errors[0].message.as_str()),
+        (power.node, "Only the caption, size and position can change on a button. Edit its look on the master's state variants.")
+    );
 }

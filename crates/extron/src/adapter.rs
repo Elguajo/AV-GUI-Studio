@@ -18,9 +18,8 @@ pub fn project(doc: &Document) -> Result<Project, Vec<Diagnostic>> {
     if frames.is_empty() {
         return Err(error("The design page needs an Extron panel frame."));
     }
-    let mut diagnostics = Vec::new();
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
     let mut pages = Vec::new();
-    let mut component_sets = Vec::new();
     for frame in &frames {
         let (mut screen, data) = match read_frame(frame) {
             Ok((screen, data, problems)) => {
@@ -38,22 +37,22 @@ pub fn project(doc: &Document) -> Result<Project, Vec<Diagnostic>> {
                 continue;
             };
             match read_element(doc, node) {
-                Ok((item, variants)) => {
-                    screen.elements.push(item);
-                    component_sets.extend(variants);
+                Ok(item) => screen.elements.push(item),
+                // A problem in a master shows once, at the master, however many controls use it.
+                Err((at, message)) => {
+                    let layer = doc.node(at).map_or(node.name.as_str(), |n| n.name.as_str());
+                    if !diagnostics.iter().any(|d| d.node_id == at && d.message == message) {
+                        diagnostics.push(Diagnostic::error(at, layer, message));
+                    }
                 }
-                Err(message) => diagnostics.push(Diagnostic::error(node.id, &node.name, message)),
             }
         }
         pages.push((screen, data));
     }
     let panels: Vec<NodeId> = frames.iter().map(|frame| frame.id).collect();
-    for node in page.children.iter().filter(|id| !panels.contains(id) && !component_sets.contains(id)).filter_map(|id| doc.node(*id)) {
-        diagnostics.push(Diagnostic::error(
-            node.id,
-            &node.name,
-            "Only Extron panel artboards and their button component sets may be top-level layers.",
-        ));
+    let master = |node: &Node| matches!(node.kind, NodeKind::Component { .. } | NodeKind::ComponentSet { .. });
+    for node in page.children.iter().filter(|id| !panels.contains(id)).filter_map(|id| doc.node(*id)).filter(|node| !master(node)) {
+        diagnostics.push(Diagnostic::error(node.id, &node.name, "Only Extron panel artboards and master components may be top-level layers."));
     }
     // The start page is the one with the lowest Object ID (the first panel of the project); the
     // others follow in layer order. Every page shares its panel model and project name.
@@ -104,21 +103,25 @@ fn read_frame(frame: &Node) -> Result<(Page, Target, Vec<Diagnostic>), String> {
     Ok((page, (panel, name), diagnostics))
 }
 
-fn read_element(doc: &Document, node: &Node) -> Result<(Element, Option<NodeId>), String> {
-    let data = Metadata::read(node)?;
-    appearance(node)?;
-    let bounds = bounds(node)?;
-    let (control, variants) = match (&node.kind, data.kind) {
+/// A problem and the layer to fix it on.
+type Located = (NodeId, String);
+
+fn read_element(doc: &Document, node: &Node) -> Result<Element, Located> {
+    let here = |message: String| (node.id, message);
+    let data = Metadata::read(node).map_err(here)?;
+    appearance(node).map_err(here)?;
+    let bounds = bounds(node).map_err(here)?;
+    let control = match (&node.kind, data.kind) {
         (NodeKind::Text(_), Kind::Label) => {
-            let (text, color, size) = text(node, TextAlignH::Left)?;
-            (Control::Label { text, color, size }, None)
+            let (text, color, size) = text(node, TextAlignH::Left).map_err(here)?;
+            Control::Label { text, color, size }
         }
-        (NodeKind::Rectangle, Kind::Shape) => (Control::Shape { fill: solid(node)?, radius: radius(node)? }, None),
-        (NodeKind::Frame, Kind::Slider) => (slider(doc, node, &data)?, None),
+        (NodeKind::Rectangle, Kind::Shape) => Control::Shape { fill: solid(node).map_err(here)?, radius: radius(node).map_err(here)? },
+        (NodeKind::Frame | NodeKind::Instance { .. }, Kind::Slider) => slider(doc, node, &data).map_err(here)?,
         (NodeKind::Instance { component, .. }, Kind::Button) => button(doc, node, *component)?,
-        _ => return Err("Extron assignment does not match a supported layer type.".into()),
+        _ => return Err(here("Extron assignment does not match a supported layer type.".into())),
     };
-    Ok((Element { node: node.id, name: node.name.clone(), identity: data.identity()?, bounds, control }, variants))
+    Ok(Element { node: node.id, name: node.name.clone(), identity: data.identity().map_err(here)?, bounds, control })
 }
 
 fn appearance(node: &Node) -> Result<(), String> {
@@ -224,35 +227,59 @@ fn slider(doc: &Document, node: &Node, data: &Metadata) -> Result<Control, Strin
     })
 }
 
-fn button(doc: &Document, instance: &Node, component: NodeId) -> Result<(Control, Option<NodeId>), String> {
-    let master = doc.node(component).ok_or("Button component is missing.")?;
+/// A button instance's states, from the Normal, Active and Pressed variants of its set. A caption
+/// edited on the instance replaces the caption of every state; anything else about its look
+/// belongs to the variants. Problems in the set are reported at the set or the variant.
+fn button(doc: &Document, instance: &Node, component: NodeId) -> Result<Control, Located> {
+    let here = |message: &str| (instance.id, message.to_owned());
+    let master = doc.node(component).ok_or_else(|| here("Button component is missing."))?;
     let set = master
         .parent
         .and_then(|id| doc.node(id))
         .filter(|n| matches!(n.kind, NodeKind::ComponentSet { .. }))
-        .ok_or("A button must reference a component variant set.")?;
-    if !instance.overrides.iter().all(|key| matches!(key.as_str(), "size" | "position" | "name"))
-        || instance.children.iter().any(|id| doc.node(*id).is_some_and(|n| !n.overrides.is_empty()))
-    {
-        return Err("Edit appearance or caption on the button state variants before exporting.".into());
+        .ok_or_else(|| here("A button must reference a component variant set."))?;
+    if !instance.overrides.iter().all(|key| matches!(key.as_str(), "size" | "position" | "name")) {
+        return Err(here("Only the caption, size and position can change on a button. Edit its look on the master's state variants."));
     }
+    let caption = instance_caption(doc, instance).map_err(|message| here(&message))?;
+    let at_set = |message: &str| (set.id, message.to_owned());
     if set.children.len() != 3 {
-        return Err("A button needs Normal, Active and Pressed variants.".into());
+        return Err(at_set("A button needs Normal, Active and Pressed variants."));
     }
     let mut states = [None, None, None];
     let mut size = None;
     for id in &set.children {
-        let state = doc.node(*id).ok_or("Button state variant is missing.")?;
-        let (role, appearance, font) = button_state(doc, state).map_err(|err| format!("{} — {err}", state.name))?;
+        let state = doc.node(*id).ok_or_else(|| at_set("Button state variant is missing."))?;
+        let (role, mut appearance, font) = button_state(doc, state).map_err(|message| (state.id, message))?;
+        if let Some(text) = &caption {
+            appearance.text.clone_from(text);
+        }
         if states[role.id()].replace(appearance).is_some() {
-            return Err("Button state role is assigned more than once.".into());
+            return Err(at_set("Button state role is assigned more than once."));
         }
         if size.replace(font).is_some_and(|s| s != font) {
-            return Err("Button states must share the same font size.".into());
+            return Err(at_set("Button states must share the same font size."));
         }
     }
-    let [Some(normal), Some(active), Some(pressed)] = states else { return Err("Button state is missing.".into()) };
-    Ok((Control::Button { states: [normal, active, pressed], size: size.ok_or("Missing button font size.")? }, Some(set.id)))
+    let [Some(normal), Some(active), Some(pressed)] = states else { return Err(at_set("Button state is missing.")) };
+    Ok(Control::Button { states: [normal, active, pressed], size: size.ok_or_else(|| at_set("Missing button font size."))? })
+}
+
+/// The caption edited on a button instance, if any. Its layers follow the variant otherwise.
+fn instance_caption(doc: &Document, instance: &Node) -> Result<Option<String>, String> {
+    let mut caption = None;
+    for layer in instance.children.iter().filter_map(|id| doc.node(*id)) {
+        let text = matches!(layer.kind, NodeKind::Text(_));
+        if !layer.overrides.iter().all(|key| text && key == "characters") {
+            return Err("Only the caption, size and position can change on a button. Edit its look on the master's state variants.".into());
+        }
+        if let NodeKind::Text(data) = &layer.kind
+            && layer.overrides.contains("characters")
+        {
+            caption = Some(data.characters.clone());
+        }
+    }
+    Ok(caption)
 }
 
 fn button_state(doc: &Document, state: &Node) -> Result<(StateRole, ButtonState, u8), String> {

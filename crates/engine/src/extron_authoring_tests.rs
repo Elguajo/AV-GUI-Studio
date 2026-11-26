@@ -217,3 +217,42 @@ fn kits_are_built_in_or_installed_from_files_and_style_new_projects_and_blocks()
     // The project still has its copy of the removed kit.
     assert_eq!(s.execute("extron.kits", &json!({})).unwrap()["project"], "studio-dark");
 }
+
+/// The solid fill of layer `id`, as `[r, g, b, a]`.
+fn solid(s: &Session, id: crate::NodeId) -> [u8; 4] {
+    let n = s.doc().unwrap().node(id).unwrap();
+    let figcraft_doc::color::PaintKind::Solid { color } = n.fills[0].kind else { panic!("a solid fill") };
+    color.to_rgba8()
+}
+
+#[test]
+fn editing_a_master_restyles_every_control_and_undo_brings_the_look_back() {
+    let mut s = Session::new();
+    s.execute("extron.newPanel", &json!({"name": "Huddle Room"})).unwrap();
+    let mut buttons = Vec::new();
+    for (x, text) in [(40, "HDMI"), (260, "USB-C"), (480, "Mute")] {
+        buttons.push(id(&s.execute("extron.insert", &json!({"kind": "button", "x": x, "y": 100, "name": text, "text": text})).unwrap()));
+    }
+    s.execute("extron.insertBlock", &json!({"block": "Volume", "x": 40, "y": 400})).unwrap();
+    let doc = s.doc().unwrap();
+    let masters: Vec<_> = doc.nodes().filter(|n| n.plugin_data.contains_key(gui_studio_extron::MASTER_KEY)).map(|n| n.id).collect();
+    assert_eq!(masters.len(), 2, "one button and one slider master");
+    let set = masters.iter().copied().find(|m| doc.node(*m).is_some_and(|n| matches!(n.kind, figcraft_doc::NodeKind::ComponentSet { .. }))).unwrap();
+    let normal = doc.node(set).unwrap().children[0];
+    let original = solid(&s, buttons[0]);
+    assert_eq!(s.execute("extron.validate", &json!({})).unwrap()["valid"], true);
+
+    // One edit to the master restyles every button on the canvas; captions and IDs stay.
+    s.execute("node.set", &json!({"ids": [normal], "props": {"fills": ["#C82828"]}})).unwrap();
+    for (button, text) in buttons.iter().zip(["HDMI", "USB-C", "Mute"]) {
+        assert_eq!(solid(&s, *button), [0xC8, 0x28, 0x28, 0xFF], "{text} follows the master");
+        let doc = s.doc().unwrap();
+        let figcraft_doc::NodeKind::Text(data) = &doc.node(doc.node(*button).unwrap().children[0]).unwrap().kind else { panic!("a caption") };
+        assert_eq!(data.characters, text);
+    }
+    let valid = s.execute("extron.validate", &json!({})).unwrap();
+    assert_eq!((valid["valid"].as_bool(), valid["elements"].as_u64()), (Some(true), Some(6)), "{valid}");
+
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(solid(&s, buttons[2]), original);
+}

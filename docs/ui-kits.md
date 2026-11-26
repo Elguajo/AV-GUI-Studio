@@ -7,6 +7,7 @@ A UI kit gives a touch panel project its look: the colours of native buttons (No
 - **Built in:** Aurora (deep teal, the demo's look and the default), Daylight (light) and Graphite (dark grey with amber).
 - **New project:** File → Extron → New touch panel project… asks for the touch panel and the kit.
 - **UI kits window:** File → Extron → UI kits… shows every kit. **Controls** inserts a button, slider, label or shape in the chosen kit's look. **Blocks** inserts a block on the page of the selection, or the page in the middle of the view. **Use for this project** makes the kit the project's kit: the controls inserted from then on take its look, and placed controls keep theirs.
+- **Masters:** buttons and sliders are instances of one master per kit, made beside the pages the first time a control of that kit is inserted (**Aurora button**, **Aurora slider**). Editing a master restyles every control made from it, whichever way it was inserted; after the master is edited, the kit's colours no longer describe those controls. A kit switch gives new controls the new kit's masters.
 - **Install kit…** copies a kit file into the app's `UI Kits` folder, next to `Plugins` in the user's settings folder. A kit with the id of an installed kit replaces it. **Remove kit** deletes an installed kit; built-in kits stay.
 - A project keeps a copy of its kit on its pages, so it opens with the same look on a computer where the kit is not installed.
 

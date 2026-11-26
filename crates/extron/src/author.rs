@@ -6,12 +6,16 @@
 //! Object and Control IDs come from one project-wide counter kept in every panel frame's
 //! `plugin_data` ([`NEXT_ID_KEY`]), so an ID that belonged to a deleted control or page is never
 //! handed out again. A control's Control ID equals its Object ID, as in the prototype and the demo.
+//!
+//! Buttons and sliders are instances of a master component beside the panels, one per control
+//! kind and UI kit ([`MASTER_KEY`]). Editing a master restyles every control made from it; each
+//! keeps its own key and IDs. A button's caption is an override on its instance.
 
 use std::str::FromStr;
 
 use figcraft_doc::{Document, Node, NodeId, NodeKind, TextAlignH};
 
-use crate::demo::{self, ButtonVariants};
+use crate::demo;
 use crate::kit::Kit;
 use crate::metadata::{KEY, Kind, Metadata};
 use crate::model::{MAX_ELEMENTS, MAX_PAGES, Profile, StateRole, profile};
@@ -26,6 +30,13 @@ const PAGE_OBJECT_ID: u16 = 100;
 pub const KIT_KEY: &str = "guiStudio.kit";
 /// The space a new page leaves to the right of what is already on the canvas.
 const ARTBOARD_GAP: i32 = 160;
+/// The `plugin_data` entry marking a master: `button:<kit id>` on a button's variant set,
+/// `slider:<kit id>` on a slider component.
+pub const MASTER_KEY: &str = "guiStudio.master";
+
+/// Rebuilds an instance from its main component: the editor's component sync
+/// (`figcraft_engine::components::sync_instance`), which this crate cannot depend on.
+pub type SyncInstance = fn(&mut Document, NodeId);
 
 /// A native control type that can be inserted or assigned.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -81,7 +92,7 @@ impl ControlKind {
     fn layer(self) -> &'static str {
         match self {
             Self::Button => "an instance of a button variant set",
-            Self::Slider => "a frame",
+            Self::Slider => "a frame or an instance of a slider master",
             Self::Label => "a text layer",
             Self::Shape => "a rectangle",
         }
@@ -91,7 +102,7 @@ impl ControlKind {
         matches!(
             (self, kind),
             (Self::Button, NodeKind::Instance { .. })
-                | (Self::Slider, NodeKind::Frame)
+                | (Self::Slider, NodeKind::Frame | NodeKind::Instance { .. })
                 | (Self::Label, NodeKind::Text(_))
                 | (Self::Shape, NodeKind::Rectangle)
         )
@@ -288,8 +299,9 @@ fn right_edge(doc: &Document, root: NodeId) -> i32 {
     doc.bounds_of(&children).map_or(0, |b| b.x1.ceil() as i32)
 }
 
-/// Insert a `kind` control at the top of a page, with a new key and IDs.
-pub fn insert(doc: &mut Document, kind: ControlKind, spec: Insert) -> Result<Assigned, String> {
+/// Insert a `kind` control at the top of a page, with a new key and IDs. A button or slider is an
+/// instance of the kit's master, which `sync` builds.
+pub fn insert(doc: &mut Document, kind: ControlKind, spec: Insert, sync: SyncInstance) -> Result<Assigned, String> {
     let panel = match spec.panel {
         Some(id) if panels(doc).contains(&id) => id,
         Some(id) => return Err(format!("Node {id} is not an Extron panel artboard.")),
@@ -313,17 +325,12 @@ pub fn insert(doc: &mut Document, kind: ControlKind, spec: Insert) -> Result<Ass
     let rect = [spec.x.unwrap_or((width - w) / 2), spec.y.unwrap_or((height - h) / 2), w, h];
     let name = spec.name.unwrap_or_else(|| kind.label().into());
     let layer = match kind {
-        ControlKind::Button => {
-            let text = spec.text.unwrap_or_else(|| kind.label().into());
-            let crate::model::Control::Button { states, size } = kit.button(&text)? else { return Err("Missing button preset.".into()) };
-            let root = doc.current_page.ok_or("Missing design page.")?;
-            let at = variant_spot(doc, root, panel);
-            demo::button(doc, root, ButtonVariants { name: &name, rect, states, size, at })?
-        }
-        ControlKind::Slider => {
-            let mut frame = demo::node(doc, NodeKind::Frame, &name, rect);
-            frame.fills.clear();
-            frame
+        ControlKind::Button | ControlKind::Slider => {
+            let id = instance(doc, kind, &kit, panel, &name, rect, sync)?;
+            if kind == ControlKind::Button {
+                caption(doc, id, &spec.text.unwrap_or_else(|| kind.label().into()))?;
+            }
+            return identify(doc, id, kind);
         }
         ControlKind::Label => {
             let text = spec.text.unwrap_or_else(|| kind.label().into());
@@ -339,15 +346,112 @@ pub fn insert(doc: &mut Document, kind: ControlKind, spec: Insert) -> Result<Ass
         }
     };
     let id = demo::insert(doc, layer, panel)?;
-    if kind == ControlKind::Slider {
-        demo::slider(doc, id, rect, kit.slider()?)?;
-    }
     identify(doc, id, kind)
 }
 
+/// An instance of the `kind` master of `kit` named `name` at `rect` in `panel`. A size other than
+/// the master's is the instance's own (a `size` override), and its layers follow their constraints.
+fn instance(
+    doc: &mut Document,
+    kind: ControlKind,
+    kit: &Kit,
+    panel: NodeId,
+    name: &str,
+    rect: [i32; 4],
+    sync: SyncInstance,
+) -> Result<NodeId, String> {
+    let component = master(doc, kind, kit, panel)?;
+    let main = doc.node(component).ok_or("The master component is missing.")?;
+    let (mw, mh) = (main.width, main.height);
+    let [x, y, w, h] = rect;
+    let mut layer = demo::node(doc, NodeKind::Instance { component, props: Default::default() }, name, [x, y, mw.round() as i32, mh.round() as i32]);
+    layer.source = Some(component);
+    let id = demo::insert(doc, layer, panel)?;
+    sync(doc, id);
+    let (w, h) = (f64::from(w), f64::from(h));
+    let resized = (w - mw).abs() > f64::EPSILON || (h - mh).abs() > f64::EPSILON;
+    if resized {
+        figcraft_layout::set_size(doc, id, w, h);
+        figcraft_layout::apply_constraints(doc, id, mw, mh);
+    }
+    let layer = doc.node_mut(id).ok_or("The new control is missing.")?;
+    if resized {
+        layer.overrides.insert("size".into());
+    }
+    if layer.name != name {
+        layer.name = name.into();
+        layer.overrides.insert("name".into());
+    }
+    Ok(id)
+}
+
+/// Show `text` on button instance `id`: an override of its caption, unless the master already
+/// says it. It applies to every state of the button.
+fn caption(doc: &mut Document, id: NodeId, text: &str) -> Result<(), String> {
+    let caption = doc.node(id).and_then(|n| n.children.iter().copied().find(|c| doc.node(*c).is_some_and(|c| matches!(c.kind, NodeKind::Text(_)))));
+    let layer = caption.and_then(|c| doc.node_mut(c)).ok_or("The button master has no caption.")?;
+    let NodeKind::Text(data) = &mut layer.kind else { return Err("The button master has no caption.".into()) };
+    let text = text.replace("\r\n", "\n");
+    if data.characters != text {
+        let len = data.char_count();
+        data.replace_range(0, len, &text);
+        layer.overrides.insert("characters".into());
+    }
+    Ok(())
+}
+
+/// The component to instantiate for a `kind` control in the look of `kit` (a button's Normal
+/// variant): the kit's master on the canvas page, made beside the panels the first time.
+fn master(doc: &mut Document, kind: ControlKind, kit: &Kit, panel: NodeId) -> Result<NodeId, String> {
+    let root = doc.current_page.ok_or("Missing design page.")?;
+    let tag = format!("{}:{}", kind.name(), kit.id);
+    let found = doc.node(root).into_iter().flat_map(|page| page.children.iter()).filter_map(|id| doc.node(*id)).find(|n| {
+        n.plugin_data.get(MASTER_KEY) == Some(&tag)
+            && matches!((kind, &n.kind), (ControlKind::Button, NodeKind::ComponentSet { .. }) | (ControlKind::Slider, NodeKind::Component { .. }))
+    });
+    if let Some(master) = found {
+        if kind == ControlKind::Slider {
+            return Ok(master.id);
+        }
+        let normal = master
+            .children
+            .iter()
+            .copied()
+            .find(|id| doc.node(*id).and_then(|n| Metadata::read(n).ok()).is_some_and(|data| data.role == Some(StateRole::Normal)));
+        return normal.or_else(|| master.children.first().copied()).ok_or_else(|| format!("The \"{}\" master has no variants.", master.name));
+    }
+    let at = variant_spot(doc, root, panel);
+    let [w, h] = kind.default_size();
+    let name = format!("{} {}", kit.name, kind.name());
+    let (id, component) = match kind {
+        ControlKind::Button => {
+            let crate::model::Control::Button { states, size } = kit.button(kind.label())? else { return Err("Missing button preset.".into()) };
+            demo::button_set(doc, root, &name, [w, h], states, size, at)?
+        }
+        _ => {
+            let kind = NodeKind::Component { description: String::new(), props: Default::default(), prop_order: Vec::new() };
+            let mut layer = demo::node(doc, kind, &name, [at[0], at[1], w, h]);
+            layer.fills.clear();
+            let id = demo::insert(doc, layer, root)?;
+            demo::slider(doc, id, [0, 0, w, h], kit.slider()?)?;
+            (id, id)
+        }
+    };
+    doc.node_mut(id).ok_or("The new master is missing.")?.plugin_data.insert(MASTER_KEY.into(), tag);
+    Ok(component)
+}
+
 /// Insert the block `name` of `kit` on a page (default: the start page) with its top-left corner at
-/// `at` (default: centred), each item a control with a new key and IDs.
-pub fn insert_block(doc: &mut Document, kit: &Kit, name: &str, panel: Option<NodeId>, at: Option<[i32; 2]>) -> Result<Vec<Assigned>, String> {
+/// `at` (default: centred), each item a control with a new key and IDs. Its buttons and sliders are
+/// instances of the kit's masters, which `sync` builds.
+pub fn insert_block(
+    doc: &mut Document,
+    kit: &Kit,
+    name: &str,
+    panel: Option<NodeId>,
+    at: Option<[i32; 2]>,
+    sync: SyncInstance,
+) -> Result<Vec<Assigned>, String> {
     let block = kit.block(name).ok_or_else(|| format!("The {} kit has no block \"{name}\".", kit.name))?.clone();
     let panel = match panel {
         Some(id) => id,
@@ -379,7 +483,7 @@ pub fn insert_block(doc: &mut Document, kit: &Kit, name: &str, panel: Option<Nod
             font: item.size,
             muted: item.muted,
         };
-        placed.push(insert(doc, kind, spec)?);
+        placed.push(insert(doc, kind, spec, sync)?);
     }
     Ok(placed)
 }

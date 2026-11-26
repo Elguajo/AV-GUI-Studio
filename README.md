@@ -23,6 +23,8 @@ Each page of a project is an artboard of the panel's size on the canvas. The **A
 
 Controls are added with the `extron.insert` and `extron.assign` commands, from the CLI or an AI agent (see below); the editor has no toolbar for them yet. `extron.insert` takes the page of the selection, or the page in the middle of the view. Each page and control gets an Object ID, and a button or slider the same Control ID, from one counter stored on every page, so the ID of a deleted control or page is never handed out again.
 
+Buttons and sliders are instances of **master components**: the first one inserted in a kit's look creates that kit's master beside the pages, such as **Aurora button** (a variant set with Normal, Active and Pressed) or **Aurora slider** (track, fill and thumb). Edit a master to restyle every control made from it at once; each control keeps its key, Object ID and Control ID. A button's caption is its own (an instance override) and applies to all three states; change its look on the master's variants. A problem in a master shows once in Problems, at the master. Masters stay on the canvas when their controls are deleted and are not exported. Labels and shapes are plain layers.
+
 The **Problems** section under the layers lists every export problem of an Extron screen and updates as you edit. Select a problem to select its layer, reveal it in the layers and bring it into view. Export stays blocked until the list is empty.
 
 EXUI export works on its own. Configure the separately distributed Extron exporter 0.8.8 and donor registry before starting the editor or CLI if you plan to build GDL:
@@ -62,7 +64,7 @@ To author a screen without the editor, start from `extron.newPanel` and add cont
 ]
 ```
 
-`extron.assign {kind, ids?}` turns layers drawn directly in the panel into controls: a text layer into a label, a rectangle into a shape, a frame with a track, fill and thumb into a slider, and an instance of a three-variant set into a button whose variants become Normal, Active and Pressed in order.
+`extron.assign {kind, ids?}` turns layers drawn directly in the panel into controls: a text layer into a label, a rectangle into a shape, a frame with a track, fill and thumb (or an instance of a slider master) into a slider, and an instance of a three-variant set into a button whose variants become Normal, Active and Pressed in order.
 
 ## AI agents (MCP)
 

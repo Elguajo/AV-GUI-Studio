@@ -168,10 +168,7 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
         ..Default::default()
     };
     let doc = s.doc_mut()?;
-    let added = gui_studio_extron::insert(doc, kind, spec).map_err(|error| bad(cmd, error))?;
-    if kind == gui_studio_extron::ControlKind::Button {
-        crate::components::sync_instance(doc, added.node);
-    }
+    let added = gui_studio_extron::insert(doc, kind, spec, crate::components::sync_instance).map_err(|error| bad(cmd, error))?;
     if boolean(p, "select").unwrap_or(true) {
         s.set_selection(vec![added.node]);
     }
@@ -368,11 +365,8 @@ fn insert_block(s: &mut Session, p: &Value) -> Result<Value> {
         _ => return Err(bad(cmd, "Give both `x` and `y`, or neither.")),
     };
     let doc = s.doc_mut()?;
-    let placed = gui_studio_extron::insert_block(doc, &kit, &block, panel, at).map_err(|error| bad(cmd, error))?;
+    let placed = gui_studio_extron::insert_block(doc, &kit, &block, panel, at, crate::components::sync_instance).map_err(|error| bad(cmd, error))?;
     let ids: Vec<_> = placed.iter().map(|a| a.node).collect();
-    for item in &placed {
-        crate::components::sync_instance(doc, item.node);
-    }
     if boolean(p, "select").unwrap_or(true) {
         s.set_selection(ids.clone());
     }

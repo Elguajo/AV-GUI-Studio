@@ -273,3 +273,39 @@ A Problems section under the layers lists every export problem of an Extron scre
 - Clippy with warnings denied for all targets of `gui-studio-extron`, `figcraft-engine` and `figcraft-ui-egui` passed, as did rustfmt. The only warnings came from the workspace manifest, which this task did not change.
 - Not run: the desktop window was not launched for a manual check, and the full package suites were not rerun.
 - Scope: every current rule is an error. GUI Designer's one warning (an unreferenced popup) and the unique page and popup names need pages and popups, so the Warning severity and those rules moved to Phase 02. The panel already draws warnings differently.
+
+### task-08-r1
+
+Task: Author Extron controls from shared master components, so a master edit restyles every control made from it.
+Status: COMPLETED
+Freshness: CHECKED (2026-11-25)
+Source: Phase 01 control-authoring task and the user's request for master components (2026-11-25).
+
+#### Request
+
+```text
+Make master components of the Extron control entities in the editor, so that the design of buttons and their other parameters can be changed at any time by editing only the master element.
+```
+
+#### Prompt
+
+```text
+Extend the existing authoring (extron.insert, extron.insertBlock, extron.assign) so buttons and sliders are instances of one master per kind and kit, kept beside the panels on the canvas. A button's caption is an override on its instance and applies to all three states; appearance stays on the master's Normal, Active and Pressed variants. A slider's master holds its track, fill and thumb. Editing a master updates every instance on the canvas and in the next export, while each instance keeps its key, Object ID and Control ID. Report a problem in a master once, at the master layer. Labels and shapes stay plain layers; styles and variables for them are Phase 03. Keep the Aurora demo's EXUI and GDL hashes.
+```
+
+#### Freshness check
+
+Commit 1c380be added touch panel projects, pages, UI kits and the insert, insertBlock and assign commands; each inserted button got its own variant set, and sliders were plain frames. No peer session was editing the working tree when this task started.
+
+#### Current checkpoint
+
+Buttons and sliders are instances of one master per kind and kit beside the pages. A master edit restyles every control made from it; captions, sizes and IDs stay with the instances.
+
+#### Outcome / evidence
+
+- 2026-11-25: `extron.insert` and `extron.insertBlock` place a button or slider as an instance of the kit's master (`guiStudio.master` = `button:<kit>` on a variant set, `slider:<kit>` on a component), made beside the pages the first time. A size other than the master's is a `size` override, and the caption and slider parts follow resize constraints. A caption is a `characters` override on the instance and replaces the caption of all three states in export. The extron crate takes the editor's component sync as a function (`SyncInstance`), because it cannot depend on the engine.
+- Export: a button instance may override only its caption, size, position and name. A problem in a master is reported once, at the set or variant. Top-level components and variant sets are masters and never block export, so a master left without controls stays usable. Slider instances export from their resolved parts. Labels and shapes stay plain layers.
+- `gui-studio-extron` (19 tests) passed, including `buttons_and_sliders_are_instances_of_one_master_that_restyles_them_all`, `a_problem_in_a_master_is_reported_once_at_the_master` and `a_button_refuses_a_look_changed_on_the_instance`. The engine test `editing_a_master_restyles_every_control_and_undo_brings_the_look_back` runs a real `node.set` on the master: every button follows on the canvas, captions stay, export stays valid, and undo restores the look. The full `figcraft-engine` (2283 + 51), `figcraft-ui-egui` (1357 + 12), `figcraft-mcp` and `gui-studio-extron` suites passed. Clippy with warnings denied and rustfmt passed for the three changed packages.
+- The debug CLI kept the demo EXUI at `2B474E44…`. The kits script from `target/kits-evidence/` (two pages, 23 controls, two kits) produced a byte-identical EXUI `11959BBF…` with masters and a GDL with 294/294 checks. A new master-based project (three buttons, a slider and the Room audio block) built a GDL with 131/131 checks. Artifacts are in the local `target/masters-evidence/`.
+- `Cargo.lock` gained `figcraft-layout` (resize constraints) and the dev-only `figcraft-engine` (component sync in tests) for `gui-studio-extron`.
+- Not run: the desktop window was not launched, and no GDL was opened in GUI Designer.

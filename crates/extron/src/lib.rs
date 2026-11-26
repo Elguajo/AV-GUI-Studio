@@ -12,8 +12,8 @@ mod writer;
 
 pub use adapter::{is_screen, project};
 pub use author::{
-    Assigned, ControlKind, Insert, KIT_KEY, NEXT_ID_KEY, NewPage, add_page, assign, insert, insert_block, panel, panel_frame, panel_of, panels,
-    project_kit, project_profile, set_kit,
+    Assigned, ControlKind, Insert, KIT_KEY, MASTER_KEY, NEXT_ID_KEY, NewPage, SyncInstance, add_page, assign, insert, insert_block, panel,
+    panel_frame, panel_of, panels, project_kit, project_profile, set_kit,
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use converter::build;
