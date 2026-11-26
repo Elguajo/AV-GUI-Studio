@@ -18,9 +18,9 @@ concurrency:
   group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# The Rust version comes from rust-toolchain.toml and the craft-fonts commit from
-# scripts/bootstrap.ps1, as in local builds. Locally the toolchain is the windows-gnu host with the
-# MinGW in .tools/; CI uses the runner's default MSVC host, which needs no MinGW.
+# The Rust version comes from rust-toolchain.toml, as in local builds; every other source,
+# craft-fonts included, is in vendor/ or on crates.io. Locally the toolchain is the windows-gnu host
+# with the MinGW in .tools/; CI uses the runner's default MSVC host, which needs no MinGW.
 env:
   CRAFT_FONTS_REQUIRED: "1"
   CARGO_TERM_COLOR: always
@@ -38,8 +38,6 @@ jobs:
           persist-credentials: false
       - name: Install Rust (rust-toolchain.toml)
         run: rustup toolchain install
-      - name: Fetch craft-fonts into .tools
-        run: ./scripts/bootstrap.ps1 -Only fonts
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: lint
@@ -65,8 +63,6 @@ jobs:
           persist-credentials: false
       - name: Install Rust (rust-toolchain.toml)
         run: rustup toolchain install
-      - name: Fetch craft-fonts into .tools
-        run: ./scripts/bootstrap.ps1 -Only fonts
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: test

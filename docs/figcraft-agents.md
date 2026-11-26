@@ -40,7 +40,7 @@ The key words MUST, MUST NOT, SHOULD, SHOULD NOT and MAY are used as in RFC 2119
 
 23. You MUST NOT copy another product's code, assets or wording, and MUST NOT read GPL, LGPL or AGPL source. An agent that operates a proprietary app MUST only write a behaviour specification; an agent that writes code MUST NOT operate that app or read its install. Before learning from another product or adding an asset or fixture: read standards/clean-room.md.
 24. Every asset and fixture MUST be our own work or allowed by the clean-room standard, with its provenance recorded in the same change.
-25. Font files SHOULD go in storytold/craft-fonts, not other repositories. Before adding or embedding a font, read standards/licences.md.
+25. Font files SHOULD go in `vendor/craft-fonts` with a manifest row, not elsewhere. Before adding or embedding a font, read standards/licences.md.
 26. A new dependency's licence MUST be on standards/licences.md; one not on it needs a merged RFC first, so leave the dependency out until then.
 
 ## Tests
@@ -73,7 +73,7 @@ FigCraft is an open-source, pure-Rust (egui) design app (Figma-class): interface
 - Releases: `docs/releasing.md`. Control protocol: `docs/control-protocol.md`. MCP: `docs/mcp.md`.
 
 ### Checks
-Cargo is not on the system PATH: run `scripts/bootstrap.ps1` once per checkout, then load `. .\scripts\env.ps1` (PowerShell) or `source scripts/env.sh` (Git Bash) in each shell. The toolchain version is in `rust-toolchain.toml`; the MinGW and font pins are at the top of `scripts/bootstrap.ps1`.
+Cargo is not on the system PATH: run `scripts/bootstrap.ps1` once per checkout, then load `. .\scripts\env.ps1` (PowerShell) or `source scripts/env.sh` (Git Bash) in each shell. The toolchain version is in `rust-toolchain.toml`; the MinGW pin is at the top of `scripts/bootstrap.ps1`. Every source dependency outside crates.io is in `vendor/` (`vendor/README.md`); nothing is fetched from Git.
 
 For the crates you changed: `cargo fmt`, `cargo clippy -p <crate> --all-targets`, `cargo test -p <crate>`. Repository-wide steps when they apply: `cargo xtask layers`, `cargo xtask assets`, `cargo xtask wasm`, `cargo xtask parity`. `cargo xtask ci` runs them together.
 
@@ -81,7 +81,7 @@ For the crates you changed: `cargo fmt`, `cargo clippy -p <crate> --all-targets`
 - `unsafe`: none in the workspace; `Cargo.toml` sets `unsafe_code = "forbid"`. The plug-in SDK in `plugins/sdk` is outside the workspace and uses `unsafe` for the WebAssembly host calls. `figcraft_engine::guard` catches a panic at every engine entry point.
 - Attribution file: [`ATTRIBUTION.md`](ATTRIBUTION.md); `cargo xtask assets` fails on an unlisted file under `assets/`, `docs/brand/` or `docs/images/`. Licences: `LICENSE-MIT`, `LICENSE-APACHE`, `NOTICE`; `docs/brand/LICENSE-brand.txt` for the ArtCraft logos.
 - UI icons are drawn in code (`crates/ui-egui/src/icons.rs`). The app icon is `assets/app-icon/figcraft.svg` (`assets/app-icon/README.md`); `cargo xtask icon` renders the PNGs and `.ico`.
-- Fonts come from [storytold/craft-fonts](https://github.com/storytold/craft-fonts) through the optional `CRAFT_FONTS_DIR` build input (`.cargo/config.toml` points it at `.tools/craft-fonts`, which `scripts/bootstrap.ps1` checks out at a pinned commit; `crates/text/build.rs` embeds it). Without it, system fonts are scanned at runtime.
+- Fonts come from `vendor/craft-fonts`, a copy of storytold/craft-fonts (see `vendor/README.md`), through the `CRAFT_FONTS_DIR` build input that `.cargo/config.toml` sets; `crates/text/build.rs` embeds them. Without it, system fonts are scanned at runtime.
 - Run: `cargo run -p figcraft -- --control <port> [file]`; drive it with JSON lines (`engine.execute`, `ui.screenshot`). Headless: `figcraft-cli` (`info`, `export`, `run`, `commands`, `mcp`); start the agent server with `figcraft-cli mcp --automation-read-root DIR --automation-write-root DIR` (`docs/mcp.md`).
 - Contributor credits: `docs/contributors.md`.
 - `plan/` is an optional gitignored notebook.

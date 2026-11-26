@@ -5,26 +5,25 @@ Installs everything a Windows build of GUI Studio needs into .tools/ inside this
 .DESCRIPTION
 Nothing is read from or written to other folders: no global Rust, no MinGW on PATH, no sibling
 checkouts. Every download is pinned and checked against its SHA-256 (the Rust toolchain itself is
-checked by rustup; craft-fonts by its Git commit). Running it again only repairs what is missing
+checked by rustup). Running it again only repairs what is missing
 or out of date, so it is also the way to move to new pins.
 
   .tools/rustup, .tools/cargo   rustup, the toolchain from rust-toolchain.toml, the Cargo cache
   .tools/mingw64                GCC, binutils and the MinGW-w64 headers and libraries (WinLibs)
-  .tools/craft-fonts            the embedded fonts (CRAFT_FONTS_DIR in .cargo/config.toml)
 
 Afterwards, load the environment into a shell with `. .\scripts\env.ps1` (PowerShell) or
 `source scripts/env.sh` (Git Bash), then use cargo as usual.
 
 .PARAMETER Only
-Installs only the named parts: rust, mingw, fonts. CI uses `-Only fonts`.
+Installs only the named parts: rust, mingw.
 
 .EXAMPLE
 .\scripts\bootstrap.ps1
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('rust', 'mingw', 'fonts')]
-    [string[]] $Only = @('rust', 'mingw', 'fonts')
+    [ValidateSet('rust', 'mingw')]
+    [string[]] $Only = @('rust', 'mingw')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -40,11 +39,6 @@ $Pins = @{
     # x86_64-pc-windows-gnu target links against.
     MingwUrl      = 'https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-23.1.3-14.0.0-msvcrt-r3/winlibs-x86_64-posix-seh-gcc-16.2.0-mingw-w64msvcrt-14.0.0-r3.zip'
     MingwSha256   = '62af32ea58acdea1318ea5dd8eb7017eaee694dd40b269d52a59c769dcfefb82'
-    # storytold/craft-fonts: the commit FigCraft's CI used for the b828e6c7 snapshot this editor is
-    # built on. Later commits add faces (Noto Sans for Indian scripts) that the snapshot's font
-    # fallback list and its tests do not know.
-    FontsRepo     = 'https://github.com/storytold/craft-fonts.git'
-    FontsCommit   = '37827adc41fd165f9a9234ac40f94dbad353aa69'
 }
 
 $Root = Split-Path -Parent $PSScriptRoot
@@ -137,22 +131,7 @@ function Install-Mingw {
     Invoke-Native (Join-Path $dir 'bin\gcc.exe') @('-dumpfullversion')
 }
 
-function Install-Fonts {
-    $dir = Join-Path $Tools 'craft-fonts'
-    $commit = $Pins.FontsCommit
-    if ((Test-Path (Join-Path $dir '.git')) -and ((git -C $dir rev-parse HEAD) -eq $commit)) {
-        Write-Host 'craft-fonts: up to date'
-        return
-    }
-    if (-not (Test-Path (Join-Path $dir '.git'))) {
-        Invoke-Native git @('init', '--quiet', $dir)
-    }
-    Write-Host "Fetching craft-fonts $($commit.Substring(0, 7))"
-    Invoke-Native git @('-C', $dir, 'fetch', '--quiet', '--depth', '1', $Pins.FontsRepo, $commit)
-    Invoke-Native git @('-C', $dir, '-c', 'advice.detachedHead=false', 'checkout', '--quiet', '--force', 'FETCH_HEAD')
-}
 
 if ($Only -contains 'rust') { Install-Rust }
 if ($Only -contains 'mingw') { Install-Mingw }
-if ($Only -contains 'fonts') { Install-Fonts }
 Write-Host 'Done. Load the environment with: . .\scripts\env.ps1   (Git Bash: source scripts/env.sh)'

@@ -10,13 +10,13 @@ version = "0.18.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
-repository = "https://github.com/storytold/figcraft"
+repository = "https://github.com/Elguajo/GUI-Studio"
 
 [workspace.dependencies]
-craft-xml = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
-craft-svg = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220", default-features = false, features = ["tree"] }
-craft-vectordrawable = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
-craft-pdf = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+craft-xml = { version = "0.1.0", path = "vendor/craft-libs/crates/xml" }
+craft-svg = { version = "0.1.0", default-features = false, features = ["tree"], path = "vendor/craft-libs/crates/svg" }
+craft-vectordrawable = { version = "0.1.0", path = "vendor/craft-libs/crates/vectordrawable" }
+craft-pdf = { version = "0.1.0", path = "vendor/craft-libs/crates/pdf" }
 # internal
 figcraft-geom = { path = "crates/geom" }
 figcraft-color = { path = "crates/color" }
@@ -37,41 +37,41 @@ figcraft-mcp = { path = "crates/mcp" }
 figcraft-collab-net = { path = "crates/collab-net" }
 figcraft-plugin = { path = "crates/plugin" }
 
-# Keep every craft-libs crate on one rev.
+# craft-libs crates are vendored in vendor/craft-libs (vendor/README.md).
 # Which paths stored in a document may be followed (craft-libs).
-craft-docpath = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+craft-docpath = { version = "0.1.0", path = "vendor/craft-libs/crates/docpath" }
 # Who draws the window frame on Linux — the compositor or the app — so every Craft app shows the
 # same native titlebar per desktop (craft-libs). FigCraft only reads the probe result and maps it
 # to its own `TitleBar`, so it does not enable craft-window's optional `egui` helpers (which would
 # pull a second egui family version).
-craft-window = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+craft-window = { path = "vendor/craft-libs/crates/window" }
 # craft-update: app-specific pretend versions apply to startup and manual checks.
-craft-update = { git = "https://github.com/storytold/craft-libs", version = "=0.1.0", rev = "a49329e71e32ad93794ab595c41f33209a7d2220", features = ["egui"] }
+craft-update = { version = "=0.1.0", features = ["egui"], path = "vendor/craft-libs/crates/update" }
 # The suite's font store: exact lookup of a missing font in the pinned Google Fonts and Noto
 # indexes, and checksum-verified installs into the one folder every Craft app reads (craft-libs).
-craft-font-store = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
-craft-font-catalog = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+craft-font-store = { path = "vendor/craft-libs/crates/font-store" }
+craft-font-catalog = { path = "vendor/craft-libs/crates/font-catalog" }
 # Shared dropdown menus: a combo box whose menu grows back after shrinking (craft-libs).
-craft-ui = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+craft-ui = { path = "vendor/craft-libs/crates/ui" }
 # The macOS app menu whose Quit (⌘Q) asks the app before quitting, like the window's close button
 # (craft-libs; the menu it replaces quits straight through `terminate:` and loses unsaved work).
-craft-menu = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+craft-menu = { path = "vendor/craft-libs/crates/menu" }
 # Where the settings live: the suite's folder rules, portable mode included (craft-libs).
-craft-settings = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+craft-settings = { path = "vendor/craft-libs/crates/settings" }
 
 # Penpot export container only; JSON values cross this boundary, not shared model types.
-craft-penpot = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+craft-penpot = { path = "vendor/craft-libs/crates/penpot" }
 
 # The design-file formats (craft-libs): the .fig container and its kiwi encoding, the mapping of
 # a .fig message onto the REST file JSON, and that JSON's shared helpers.
-craft-sketch = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
-craft-zip = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
-craft-fig = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
-craft-figcraft-format = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
-craft-figma-rest = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
-craft-jpeg = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
-craft-image-codecs = { git = "https://github.com/storytold/craft-libs", rev = "ba25ccd233934d1b2f74e3c0f235168bf5f13ef3" }
-craft-gif = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220", features = ["frames"] }
+craft-sketch = { path = "vendor/craft-libs/crates/sketch" }
+craft-zip = { path = "vendor/craft-libs/crates/zip" }
+craft-fig = { path = "vendor/craft-libs/crates/fig" }
+craft-figcraft-format = { path = "vendor/craft-libs/crates/figcraft-format" }
+craft-figma-rest = { path = "vendor/craft-libs/crates/figma-rest" }
+craft-jpeg = { path = "vendor/craft-libs/crates/jpeg" }
+craft-image-codecs = { path = "vendor/craft-libs/crates/image-codecs" }
+craft-gif = { features = ["frames"], path = "vendor/craft-libs/crates/gif" }
 
 # foundation
 kurbo = { version = "0.13", features = ["serde"] }
@@ -180,30 +180,22 @@ debug = false
 strip = true
 panic = "abort"
 
-# Keep the complete egui family and native event bridge on reviewed fork commits.
+# The egui family and winit: vendored copies of the reviewed fork commits (vendor/README.md).
 [patch.crates-io]
-ecolor = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-emath = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-epaint = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-epaint_default_fonts = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-egui = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-# egui-winit is vendored with one change (no repaint when the window moves); see vendor/egui-winit/VENDORED.md.
-egui-winit = { path = "vendor/egui-winit" }
-egui-wgpu = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-egui_glow = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-egui_extras = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-egui_kittest = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-egui_system_font_provider = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-eframe = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-egui_demo_lib = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-egui_inspection = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-winit = { git = "https://github.com/storytold/winit.git", rev = "a517b3846ee8457d84ee4975110bfda6797c44dc" }
+ecolor = { path = "vendor/egui/crates/ecolor" }
+emath = { path = "vendor/egui/crates/emath" }
+epaint = { path = "vendor/egui/crates/epaint" }
+epaint_default_fonts = { path = "vendor/egui/crates/epaint_default_fonts" }
+egui = { path = "vendor/egui/crates/egui" }
+# egui-winit is vendored with one change (no repaint when the window moves); see vendor/egui/crates/egui-winit/VENDORED.md.
+egui-winit = { path = "vendor/egui/crates/egui-winit" }
+egui-wgpu = { path = "vendor/egui/crates/egui-wgpu" }
+egui_glow = { path = "vendor/egui/crates/egui_glow" }
+egui_extras = { path = "vendor/egui/crates/egui_extras" }
+eframe = { path = "vendor/egui/crates/eframe" }
+winit = { path = "vendor/winit" }
 
 # craft-libs' vendored krilla 0.8.2: decoded PNGs are capped at 1 GiB and reserved fallibly, and a
 # panic while drawing unwinds without aborting.
-krilla = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+krilla = { path = "vendor/craft-libs/vendor/krilla" }
 
-# eframe depends on egui-winit inside the egui repository, which `[patch.crates-io]` does not reach:
-# substitute the vendored copy for that source as well, so there is one egui-winit.
-[patch."https://github.com/storytold/egui.git"]
-egui-winit = { path = "vendor/egui-winit" }

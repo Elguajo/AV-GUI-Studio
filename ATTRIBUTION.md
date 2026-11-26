@@ -17,8 +17,8 @@ MIT OR Apache-2.0. No third-party icon sets are used.
 
 ## Fonts (build input, not in this repository)
 
-Release builds embed fonts from the optional craft-fonts build input
-([storytold/craft-fonts](https://github.com/storytold/craft-fonts), `CRAFT_FONTS_DIR`). Its own
+Builds embed the fonts in `vendor/craft-fonts`, a copy of
+[storytold/craft-fonts](https://github.com/storytold/craft-fonts) (`CRAFT_FONTS_DIR`). Its own
 `ATTRIBUTION.md` and licence files are authoritative; the packages ship each font's licence.
 
 | Family | Licence | Upstream |

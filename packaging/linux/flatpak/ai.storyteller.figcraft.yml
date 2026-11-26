@@ -50,8 +50,8 @@ modules:
       env:
         CARGO_HOME: /run/build/figcraft/cargo
         CARGO_NET_OFFLINE: 'true'
-        # .cargo/config.toml points CRAFT_FONTS_DIR at .tools/craft-fonts for local builds; there is
-        # none here, so build without it (a warning, not an error).
+        # .cargo/config.toml points CRAFT_FONTS_DIR at vendor/craft-fonts; this build opts out and
+        # embeds no fonts (a warning, not an error).
         CRAFT_FONTS_DIR: /nonexistent
     build-commands:
       - cargo --offline build --release --locked -p figcraft

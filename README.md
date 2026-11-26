@@ -6,7 +6,7 @@ GUI Studio is a Rust desktop editor for Extron touch panel layouts. The local Wi
 
 ## Build and run
 
-Everything the Windows build needs is installed into `.tools/` inside this checkout, from pinned and checksum-verified sources: the Rust toolchain named in `rust-toolchain.toml` (GNU host), the WinLibs MinGW-w64 C compiler and libraries, and the craft-fonts commit the build embeds. Nothing outside the checkout is used or changed. Once per checkout, and again after a pin changes:
+The sources the build needs beyond crates.io (craft-libs, the egui and winit forks, vectorcraft's geometry crates and the embedded fonts) are vendored in `vendor/`; see [vendor/README.md](vendor/README.md). The tools are installed into `.tools/` inside this checkout, from pinned and checksum-verified sources: the Rust toolchain named in `rust-toolchain.toml` (GNU host) and the WinLibs MinGW-w64 C compiler and libraries. Nothing outside the checkout is used or changed. Once per checkout, and again after a pin changes:
 
 ```powershell
 .\scripts\bootstrap.ps1
@@ -20,7 +20,7 @@ cargo build --locked --release -p figcraft -p figcraft-cli
 .\target\release\gui-studio.exe
 ```
 
-In Git Bash, `source scripts/env.sh` loads the same environment. Keep the checkout at a short path without spaces, such as `D:\DEV\GUI-Studio`: Cargo checks out its Git dependencies under `.tools\cargo\git`, whose deepest files pass Windows' 260-character path limit when the checkout itself is more than about 140 characters deep, and the MinGW linker splits its own library paths at a space.
+In Git Bash, `source scripts/env.sh` loads the same environment. Keep the checkout at a short path without spaces, such as `D:\DEV\GUI-Studio`: the MinGW linker splits its own library paths at a space, and deep dependency files under `.tools` can pass Windows' 260-character path limit.
 
 Choose **File → Extron → New 1025M demo** to open the editable Aurora Meeting Room example. Its **Home** frame contains labels, shapes, a slider and instances of the source and Mute button sets. Edit button state fills and captions on the variants beside the screen. Use **Validate screen**, **Export EXUI** or **Build GDL** in the same menu.
 
