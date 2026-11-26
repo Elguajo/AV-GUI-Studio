@@ -43,7 +43,8 @@ jobs:
           shared-key: lint
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: rustfmt
-        run: cargo fmt --all --check
+        # Plain fmt covers this virtual workspace. --all also visits vendored path dependencies.
+        run: cargo fmt --check
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets --keep-going -- -D warnings
       - name: Layer rules

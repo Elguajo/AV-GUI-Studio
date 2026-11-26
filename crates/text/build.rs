@@ -300,10 +300,10 @@ mod tests {
         assert_eq!(web.entries.matches("PackedFont::new").count(), 2);
         let path = f.0.join("fonts/face.ttf").canonicalize().unwrap();
         let (packed, len) = pack_font(&path, &f.0).unwrap();
-        assert!(web.entries.contains(&packed.display().to_string()));
+        assert!(web.entries.contains(&format!("include_bytes!({:?})", packed.to_string_lossy())));
         assert_eq!(len, std::fs::read(&path).unwrap().len());
         let native = craft_fonts(&f.0, "fonts/manifest.txt", false, false, &[], &[], Some(&f.0)).unwrap();
-        assert!(native.entries.contains(&path.display().to_string()));
+        assert!(native.entries.contains(&format!("include_bytes!({:?})", path.to_string_lossy())));
         assert!(!native.entries.contains("PackedFont"));
     }
 

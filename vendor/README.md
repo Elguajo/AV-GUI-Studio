@@ -37,6 +37,8 @@ the other licences listed per font in `craft-fonts/fonts/manifest.txt` and
   `Cargo.lock`. Between the two commits these crates differ only in `image-codecs`, which gained
   PNG physical-resolution reading and writing; nothing public was removed.
 - `egui/crates/egui-winit`: no repaint when the window moves; see its `VENDORED.md`.
+- `.gitattributes` preserves the bytes of `craft-libs/crates/font-store/index/` on checkout so the
+  bundled font indexes match their pinned SHA-256 hashes on Windows.
 - Repository tooling (CI, `.cargo`, `rust-toolchain`) and the crates this build does not use are
   left out.
 

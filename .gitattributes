@@ -2,3 +2,6 @@
 # (a copy of a Windows checkout must still run packaging/server/install.sh).
 *.sh text eol=lf
 packaging/server/* text eol=lf
+
+# The font store verifies these vendored files byte for byte against pinned SHA-256 hashes.
+vendor/craft-libs/crates/font-store/index/** -text

@@ -449,3 +449,39 @@ The exporter is found without setup, and the app builds GDL on a worker thread.
 - Tests: `converter::tests` (2: sibling discovery with the prepared registry, missing donors and relative paths, and the not-found message), `the_chosen_exporter_is_checked_kept_in_the_preferences_and_reported` (engine), and `gdl_build_tests` (the build runs on its thread, Export EXUI waits, a failing exporter ends in a "GDL build failed." toast and no file). The ignored `a_style_only_change_keeps_mutes_gdl_identity` now finds the exporter as the app does; run with `--include-ignored` and no variables set, it found the sibling checkout here and built both GDLs.
 - The full `figcraft-engine` (2291 + 51), `gui-studio-extron` (21), `figcraft-mcp` and `figcraft-ui-egui` (1363 of 1364 + 12) suites, Clippy with warnings denied and `cargo fmt --check` passed. The one failure, `extron_problems_tests::the_layer_list_stops_above_the_problems_section`, is another session's uncommitted test for its own Problems-section layout change in the same checkout, not part of this task.
 - Not run: the build was not tried by hand in the desktop window, and the file pickers of Choose GDL exporter were not driven in a test.
+
+### task-13-r1
+
+Task: Verify and land the vendored build dependencies.
+Status: COMPLETED
+Freshness: CURRENT
+Source: User continuation request (2026-11-26), summarized below.
+Supersedes: NONE
+
+#### Request
+
+```text
+Summary: Finish the vendoring task. Run the engine, UI and text tests and the wasm check with the local toolchain. If they pass, merge and push to main, remove C:\gsv and check the CI result for 34cb04d. Retain the sibling checkout and its old toolchain pending a separate decision.
+```
+
+#### Prompt
+
+```text
+Validate the vendored branch with locked offline Windows tests and a wasm check. Resolve the Windows font-catalog test failure affecting the same validation gate, keeping the production font generator behavior. Land the green branch, read back remote main and remove the temporary worktree after preserving the registry cache. Record the result of the original CI run.
+```
+
+#### Freshness check
+
+2026-11-26: main and origin/main both point to `34cb04d`, and `build/vendor-git-deps` is one commit ahead at `82fa2e0`. The branch is checked out in the main worktree. Windows CI for `34cb04d` passed lint and failed the font build-input test on a generated path assertion. The temporary worktree had no tracked or untracked changes and held the populated crates.io registry cache.
+
+#### Current checkpoint
+
+The vendored build passed the requested checks with the Windows toolchain in `.tools/` and the restored crates.io registry cache.
+
+#### Outcome / evidence
+
+- The original [Windows CI run](https://github.com/Elguajo/GUI-Studio/actions/runs/45834492302) failed in `figcraft-text --test build_input`; the lint job passed.
+- The font-catalog test now checks Rust string literals in `include_bytes!`, including escaped Windows path separators. `cargo fmt --all --check` failed by entering a partial vendored workspace whose `craft-heif` manifest is absent; CI and `xtask ci` now run `cargo fmt --check` for the root virtual workspace.
+- The first offline native run found two engine failures in font-store lookup. A Windows checkout converted the bundled `sources.json` to CRLF, invalidating the SHA-256 pin. `.gitattributes` now preserves the bytes of the bundled font-index directory.
+- All bundled index SHA-256 hashes match. A fresh Git checkout with `core.autocrlf=true` preserved the pinned `sources.json` hash. All 646 registry entries in `Cargo.lock` match `34cb04d`, and the lockfile has no Git sources.
+- `cargo test --locked --offline -p figcraft-engine -p figcraft-ui-egui -p figcraft-text` passed 3,895 tests with 5 ignored. `cargo check --locked --offline --target wasm32-unknown-unknown -p figcraft-web` and `cargo fmt --check` passed.

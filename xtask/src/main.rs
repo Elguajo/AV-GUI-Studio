@@ -63,7 +63,8 @@ fn main() -> ExitCode {
 }
 
 fn ci() -> bool {
-    run(cargo().args(["fmt", "--all", "--check"]))
+    // Plain fmt covers this virtual workspace without visiting vendored path dependencies.
+    run(cargo().args(["fmt", "--check"]))
         && run(cargo().args(["clippy", "--workspace", "--all-targets", "--keep-going", "--", "-D", "warnings"]))
         && test()
         && i18n_report()
