@@ -35,6 +35,18 @@ pub fn borderless_style(style: u32) -> u32 {
     style & !(WS_CAPTION | WS_BORDER)
 }
 
+/// Where a maximized borderless window belongs: the monitor's work area, or `None` when it is
+/// already there. Rects are `(left, top, right, bottom)` in screen pixels.
+///
+/// Without `WS_CAPTION`, Windows maximizes a window over the whole monitor (plus its sizing border),
+/// as it would a full-screen one, while winit's `WM_NCCALCSIZE` keeps the client area to the work
+/// area: the rest of the window, over the taskbar, is a blank strip of non-client area. Placing the
+/// window on the work area makes window and client one rect and keeps the taskbar visible.
+#[cfg(any(windows, test))]
+pub fn maximized_placement(window: (i32, i32, i32, i32), work: (i32, i32, i32, i32)) -> Option<(i32, i32, i32, i32)> {
+    (window != work).then_some(work)
+}
+
 /// The per-frame step that keeps the windows borderless; a no-op where the OS draws the frame
 /// (macOS, Linux, the BSDs), where the app uses the system title bar, and in the browser.
 pub struct WindowFrame {
@@ -89,6 +101,7 @@ mod platform {
             return;
         }
         strip(hwnd);
+        fit_maximized(hwnd);
     }
 
     /// Removes `WS_CAPTION`/`WS_BORDER` and has Windows recalculate the frame; a no-op once they
@@ -107,6 +120,30 @@ mod platform {
             co::SWP::FRAMECHANGED | co::SWP::NOMOVE | co::SWP::NOSIZE | co::SWP::NOZORDER | co::SWP::NOACTIVATE,
         );
     }
+
+    /// Moves a maximized window, which Windows spreads over the whole monitor once it has no
+    /// caption, onto its monitor's work area; a no-op when it is there or not maximized. The window
+    /// stays maximized and keeps its restore position.
+    fn fit_maximized(hwnd: &HWND) {
+        if !hwnd.IsZoomed() {
+            return;
+        }
+        let (Ok(window), Ok(info)) = (hwnd.GetWindowRect(), hwnd.MonitorFromWindow(co::MONITOR::DEFAULTTONEAREST).GetMonitorInfo()) else {
+            return;
+        };
+        let w = info.rcWork;
+        let Some((left, top, right, bottom)) =
+            super::maximized_placement((window.left, window.top, window.right, window.bottom), (w.left, w.top, w.right, w.bottom))
+        else {
+            return;
+        };
+        let _ = hwnd.SetWindowPos(
+            HwndPlace::None,
+            POINT::with(left, top),
+            SIZE::with(right - left, bottom - top),
+            co::SWP::NOZORDER | co::SWP::NOACTIVATE,
+        );
+    }
 }
 
 #[cfg(not(windows))]
@@ -121,7 +158,22 @@ mod window_frame_tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
-    use super::{WS_BORDER, WS_CAPTION, WindowFrame, borderless_style};
+    use super::{WS_BORDER, WS_CAPTION, WindowFrame, borderless_style, maximized_placement};
+
+    #[test]
+    fn a_maximized_window_over_the_whole_monitor_moves_to_the_work_area() {
+        // 1920x1200 monitor with a 65 px taskbar; Windows put the captionless window over all of it.
+        let work = (0, 0, 1920, 1135);
+        assert_eq!(maximized_placement((-8, -8, 1928, 1208), work), Some(work));
+        // A second monitor left of the first, taskbar on top.
+        let work = (-1920, 48, 0, 1080);
+        assert_eq!(maximized_placement((-1928, -8, 8, 1088), work), Some(work));
+    }
+
+    #[test]
+    fn a_window_already_on_the_work_area_is_left_alone() {
+        assert_eq!(maximized_placement((0, 0, 1920, 1135), (0, 0, 1920, 1135)), None);
+    }
 
     #[cfg(windows)]
     #[test]
