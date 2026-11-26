@@ -17,6 +17,7 @@ use crate::theme::{COMPONENT, Tokens, doc_c32, regular, semibold};
 mod autopan;
 mod background;
 mod builder;
+mod control_ids;
 mod input;
 mod outline;
 mod overlays;
@@ -418,6 +419,7 @@ pub fn show(app: &mut FigApp, ui: &mut Ui, worker: &mut Worker) {
     crate::comments::popovers(app, &ctx);
     crate::versions::preview_banner(app, &ctx, banners);
     crate::branch_ui::banner(app, &ctx, banners);
+    crate::extron::build_banner(app, &ctx, banners);
     crate::dev_mode::focus_bar(app, &ctx, banners);
     // The cursor: the tool's, unless something on the canvas with its own has the pointer.
     app.canvas.cursor = None;

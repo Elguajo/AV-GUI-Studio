@@ -297,11 +297,11 @@ fn a_layer_alone_on_the_page_has_nothing_to_align_to() {
     let inner = id(&s.execute("shape.rectangle", &json!({"x": 20, "y": 30, "width": 10, "height": 10, "parent": f})).unwrap());
     let loose = id(&s.execute("shape.rectangle", &json!({"x": 300, "y": 5, "width": 10, "height": 10})).unwrap());
     let doc = s.doc().unwrap();
-    assert!(!can_align(doc, &[]));
-    assert!(!can_align(doc, &[loose]), "alone on the page");
-    assert!(!can_align(doc, &[f, inner]), "a frame with its own child is the frame alone");
-    assert!(can_align(doc, &[inner]), "one in a frame aligns to it");
-    assert!(can_align(doc, &[f, loose]), "two align to each other");
+    assert!(!can_align(doc, &[], false));
+    assert!(!can_align(doc, &[loose], false), "alone on the page");
+    assert!(!can_align(doc, &[f, inner], false), "a frame with its own child is the frame alone");
+    assert!(can_align(doc, &[inner], false), "one in a frame aligns to it");
+    assert!(can_align(doc, &[f, loose], false), "two align to each other");
     // Where the buttons are off, the command still does nothing (and no harm).
     let before = doc.world_bounds(loose);
     s.execute("align.right", &json!({"ids": [loose]})).unwrap();

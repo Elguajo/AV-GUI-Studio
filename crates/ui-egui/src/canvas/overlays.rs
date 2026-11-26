@@ -71,6 +71,7 @@ pub(super) fn overlays(app: &FigApp, painter: &egui::Painter, t: &Tokens) -> Vec
     if view.mask_outlines || view.frame_outlines || view.show_slices {
         view_outlines(app, painter, t, ds, &doc);
     }
+    super::control_ids::draw(app, painter, &view, &doc, page);
     // Drop target / insertion indicator.
     let ov = &app.session.tool.overlay;
     if let Some(d) = ov.drop_target

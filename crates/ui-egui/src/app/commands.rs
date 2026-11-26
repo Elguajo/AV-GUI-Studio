@@ -320,6 +320,7 @@ impl FigApp {
         let now = self.clock.now();
         self.autosave_tick(ctx, now);
         self.auto_save_tick(ctx, now);
+        crate::extron::build_tick(self, ctx);
         updates_ui::tick(self, ctx);
         self.logic_ticked = true;
     }

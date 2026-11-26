@@ -36,6 +36,7 @@ pub const UI_COMMANDS: &[&str] = &[
     "extron.exportExui",
     "extron.buildGdl",
     "extron.kitsWindow",
+    "extron.chooseExporter",
     "file.open",
     "file.import",
     "file.placeImage",
@@ -99,6 +100,7 @@ pub fn invoke(app: &mut FigApp, id: &str) {
         "extron.demo" => crate::extron::open_new(app, id, json!({})),
         "extron.newPanel" => crate::extron::open_new_project(app),
         "extron.kitsWindow" => crate::extron::open_kits(app),
+        "extron.chooseExporter" => crate::extron::choose_exporter(app, false, None),
         "extron.validate" => crate::extron::validate(app),
         "extron.exportExui" | "extron.buildGdl" => crate::extron::save(app, id),
         // From the keyboard or a menu, typing goes on in the new sticky.
@@ -294,7 +296,10 @@ fn menu_level(app: &mut FigApp, ui: &mut Ui, prefix: &str) -> bool {
                 continue;
             }
             // One window in the browser.
-            let enabled = available(m.id) && !(m.id == "window.new" && ui.ctx().embed_viewports());
+            let enabled = available(m.id)
+                && !(m.id == "window.new" && ui.ctx().embed_viewports())
+                // While a GDL is being built, the Extron export actions wait for it.
+                && !(app.ui.gdl_build.is_some() && matches!(m.id, "extron.exportExui" | "extron.buildGdl" | "extron.chooseExporter"));
             let checked = figcraft_engine::cmd::view::checked(&app.session, m.id).unwrap_or(false);
             if item(ui, &i18n::menu_item(m.id, m.label), crate::shortcuts::shortcut(m.id).unwrap_or(""), enabled, checked, &t) && enabled {
                 clicked = Some(m.id);

@@ -337,6 +337,8 @@ mod extended_chain_tests;
 #[cfg(test)]
 mod extron_authoring_tests;
 #[cfg(test)]
+mod extron_identity_tests;
+#[cfg(test)]
 mod eyedropper_create_tests;
 #[cfg(test)]
 mod eyedropper_image_tests;
@@ -412,6 +414,8 @@ mod jam_open_tests;
 mod jpg_export_tests;
 #[cfg(test)]
 mod keymap_tests;
+#[cfg(test)]
+mod layout_menu_tests;
 #[cfg(test)]
 mod layout_suggest_tests;
 #[cfg(test)]

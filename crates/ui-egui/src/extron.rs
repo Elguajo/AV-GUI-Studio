@@ -228,18 +228,123 @@ pub(crate) fn save(app: &mut FigApp, id: &str) {
     }) else {
         return;
     };
+    if app.ui.gdl_build.is_some() {
+        app.toast(tr("A GDL is being built. Wait for it to finish."));
+        return;
+    }
     let Ok(doc) = app.session.doc() else {
         app.toast(tr("Open an Extron screen first."));
         return;
     };
     let name = figcraft_engine::cmd::file::safe_file_name(&doc.name);
+    if id == "extron.buildGdl" {
+        #[cfg(target_arch = "wasm32")]
+        {
+            app.toast(tr("GDL build is available in the desktop app."));
+            return;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Err(why) = figcraft_engine::cmd::extron::find_exporter(&app.session) {
+            choose_exporter(app, true, Some(why));
+            return;
+        }
+    }
     app.pick_save(title, &format!("{name}.{ext}"), &[ext], move |app, path| {
-        let Some(result) = app.run(id, json!({"path": path.to_string_lossy()})) else { return };
-        if let Some(checks) = result["checks"].as_str() {
-            app.toast(trf("GDL built. Verification {checks}.", &[("checks", &checks)]));
-        } else {
+        #[cfg(not(target_arch = "wasm32"))]
+        if id == "extron.buildGdl" {
+            start_build(app, path);
+            return;
+        }
+        if app.run(id, json!({"path": path.to_string_lossy()})).is_some() {
             app.toast(tr("EXUI exported."));
         }
+    });
+}
+
+/// A GDL being built on a thread of its own: the file's name and the build.
+pub struct GdlBuild {
+    pub(crate) name: String,
+    handle: std::thread::JoinHandle<Result<Value, String>>,
+}
+
+/// Build the open project's GDL at `path` on a worker thread: the exporter runs for several
+/// seconds, and the window keeps working meanwhile. [`build_tick`] reports the result.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn start_build(app: &mut FigApp, path: std::path::PathBuf) {
+    let Ok(doc) = app.session.doc() else { return };
+    let project = match figcraft_engine::gui_studio_extron::project(doc) {
+        Ok(project) => project,
+        Err(items) => {
+            refresh(app, true);
+            let reason = items.first().map(ToString::to_string).unwrap_or_default();
+            app.toast(trf("GDL build failed. {reason}", &[("reason", &reason)]));
+            return;
+        }
+    };
+    let exporter = match figcraft_engine::cmd::extron::find_exporter(&app.session) {
+        Ok(exporter) => exporter,
+        Err(why) => return app.toast(why),
+    };
+    let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let build = move || figcraft_engine::gui_studio_extron::build(&project, &path, &exporter);
+    match std::thread::Builder::new().name("gui-studio-gdl".into()).spawn(build) {
+        Ok(handle) => app.ui.gdl_build = Some(GdlBuild { name, handle }),
+        Err(error) => app.toast(trf("GDL build failed. {reason}", &[("reason", &error)])),
+    }
+}
+
+/// Once a frame: report a finished GDL build, or look again shortly while one runs.
+pub(crate) fn build_tick(app: &mut FigApp, ctx: &Context) {
+    let Some(build) = app.ui.gdl_build.take_if(|b| b.handle.is_finished()) else {
+        if app.ui.gdl_build.is_some() {
+            ctx.request_repaint_after(std::time::Duration::from_millis(200));
+        }
+        return;
+    };
+    match build.handle.join() {
+        Ok(Ok(result)) => {
+            let checks = result["checks"].as_str().unwrap_or_default().to_owned();
+            app.toast(trf("{name} built. Verification {checks}.", &[("name", &build.name), ("checks", &checks)]));
+        }
+        Ok(Err(reason)) => app.toast(trf("GDL build failed. {reason}", &[("reason", &reason)])),
+        Err(_) => app.toast(trf("GDL build failed. {reason}", &[("reason", &"the build stopped unexpectedly")])),
+    }
+}
+
+/// While a GDL is being built: a banner over the canvas saying so.
+pub(crate) fn build_banner(app: &FigApp, ctx: &Context, canvas: Rect) {
+    let Some(build) = &app.ui.gdl_build else { return };
+    let t = Tokens::get(ctx);
+    let text = trf("Building {name}…", &[("name", &build.name)]);
+    widgets_banner(ctx, canvas, |ui| {
+        ui.add(egui::Spinner::new().size(14.0));
+        ui.label(RichText::new(text).font(regular(11.0)).color(t.text));
+    });
+}
+
+fn widgets_banner(ctx: &Context, canvas: Rect, add: impl FnOnce(&mut Ui)) {
+    crate::widgets::canvas_banner(ctx, egui::Id::unique("extron_gdl_build"), canvas, add);
+}
+
+/// File ▸ Extron ▸ Choose GDL exporter…: pick the exporter's Extron.Cli.dll, then its donor
+/// registry, and keep them. With `then_build`, Build GDL goes on once they are chosen; `why` says
+/// first why the exporter is asked for.
+pub(crate) fn choose_exporter(app: &mut FigApp, then_build: bool, why: Option<String>) {
+    if let Some(why) = why {
+        app.toast(why);
+    }
+    app.pick_open(tr("Choose the Extron exporter (Extron.Cli.dll)"), &["dll"], move |app, cli| {
+        app.pick_open(tr("Choose the exporter's donor registry (donors.json)"), &["json"], move |app, registry| {
+            let params = json!({"cli": cli.to_string_lossy(), "registry": registry.to_string_lossy()});
+            if app.run("extron.setExporter", params).is_none() {
+                return;
+            }
+            if then_build {
+                save(app, "extron.buildGdl");
+            } else {
+                app.toast(tr("GDL exporter chosen."));
+            }
+        });
     });
 }
 

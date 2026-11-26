@@ -72,9 +72,30 @@ pub fn specs() -> Vec<CommandSpec> {
             true,
             insert_block
         ),
+        spec!(
+            "extron.setControl",
+            "Set Extron control IDs",
+            "{ids?, controlId? (1–65534, unique; one control at a time), min?, max? (a slider's range, min below max)} → {controls: [{id, key, objectId, controlId, min, max}]}",
+            true,
+            set_control
+        ),
         spec!("extron.validate", "Validate screen", "{}", false, validate),
         spec!("extron.exportExui", "Export EXUI…", "{path}", false, export),
         spec!("extron.buildGdl", "Build GDL…", "{path}", false, build),
+        spec!(
+            "extron.exporter",
+            "GDL exporter",
+            "{} → {cli, registry, source (environment|settings|sibling)}: the Extron exporter a GDL build uses, or why none was found",
+            false,
+            exporter
+        ),
+        spec!(
+            "extron.setExporter",
+            "Choose GDL exporter…",
+            "{cli (Extron.Cli.dll), registry (donors.json, with prepared donors)} → {cli, registry, source}: kept in the preferences for later builds",
+            false,
+            set_exporter
+        ),
     ]
 }
 
@@ -392,6 +413,37 @@ fn identity(item: &gui_studio_extron::Assigned) -> Value {
     json!({"id": item.node, "key": item.key, "objectId": item.object_id, "controlId": item.control_id})
 }
 
+fn set_control(s: &mut Session, p: &Value) -> Result<Value> {
+    let cmd = "extron.setControl";
+    let targets = req_targets(cmd, s, p)?;
+    let edit = gui_studio_extron::ControlEdit { control_id: whole(cmd, p, "controlId")?, min: whole(cmd, p, "min")?, max: whole(cmd, p, "max")? };
+    if edit.control_id.is_some() && targets.len() > 1 {
+        return Err(bad(cmd, "Each control needs its own Control ID: set it on one control at a time."));
+    }
+    if edit.control_id.is_none() && edit.min.is_none() && edit.max.is_none() {
+        return Err(bad(cmd, "Give controlId, min or max."));
+    }
+    let doc = s.doc_mut()?;
+    let mut controls = Vec::new();
+    for id in targets {
+        gui_studio_extron::edit_control(doc, id, edit).map_err(|error| bad(cmd, format!("node {id}: {error}")))?;
+        let info = gui_studio_extron::control_info(doc, id).ok_or_else(|| bad(cmd, format!("node {id}: the control is missing")))?;
+        controls.push(json!({"id": id, "key": info.key, "objectId": info.object_id, "controlId": info.control_id, "min": info.min, "max": info.max}));
+    }
+    Ok(json!({"controls": controls}))
+}
+
+/// An optional whole number from 0 to 65535; anything else is an error.
+fn whole(cmd: &str, p: &Value, key: &str) -> Result<Option<u16>> {
+    match get(p, key) {
+        None | Some(Value::Null) => Ok(None),
+        Some(value) => f64_of(value)
+            .filter(|v| v.fract() == 0.0 && (0.0..=f64::from(u16::MAX)).contains(v))
+            .map(|v| Some(v as u16))
+            .ok_or_else(|| bad(cmd, format!("`{key}` must be a whole number from 0 to 65535"))),
+    }
+}
+
 fn validate(s: &mut Session, _: &Value) -> Result<Value> {
     Ok(validation(s.doc()?))
 }
@@ -442,7 +494,51 @@ fn build(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let path = output_path(cmd, p, "gdl")?;
     let project = gui_studio_extron::project(s.doc()?).map_err(|items| bad(cmd, diagnostics(&items)))?;
-    gui_studio_extron::build(&project, &path).map_err(|error| bad(cmd, error))
+    let exporter = find_exporter(s).map_err(|error| bad(cmd, error))?;
+    gui_studio_extron::build(&project, &path, &exporter).map_err(|error| bad(cmd, error))
+}
+
+/// The exporter a GDL build uses ([`gui_studio_extron::find_exporter`]): the environment, the
+/// preferences, then a sibling checkout next to the program or the working folder.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn find_exporter(s: &Session) -> std::result::Result<gui_studio_extron::Exporter, String> {
+    let near: Vec<PathBuf> = [std::env::current_exe().ok().and_then(|exe| exe.parent().map(Path::to_path_buf)), std::env::current_dir().ok()]
+        .into_iter()
+        .flatten()
+        .collect();
+    let settings = s.prefs.extron_exporter.as_ref().map(|(cli, registry)| (Path::new(cli.as_str()), Path::new(registry.as_str())));
+    gui_studio_extron::find_exporter(settings, &near)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn described(found: &gui_studio_extron::Exporter) -> Value {
+    json!({"cli": found.cli, "registry": found.registry, "source": found.source.name()})
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn exporter(s: &mut Session, _: &Value) -> Result<Value> {
+    find_exporter(s).map(|found| described(&found)).map_err(|error| crate::EngineError::Disabled("extron.exporter".into(), error))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn set_exporter(s: &mut Session, p: &Value) -> Result<Value> {
+    let cmd = "extron.setExporter";
+    let (cli, registry) = (req_string(cmd, p, "cli")?, req_string(cmd, p, "registry")?);
+    let found = gui_studio_extron::check_exporter(Path::new(&cli), Path::new(&registry), gui_studio_extron::ExporterSource::Settings)
+        .map_err(|error| bad(cmd, error))?;
+    s.prefs.extron_exporter = Some((cli, registry));
+    s.prefs_unsaved = true;
+    Ok(described(&found))
+}
+
+#[cfg(target_arch = "wasm32")]
+fn exporter(_: &mut Session, _: &Value) -> Result<Value> {
+    Err(bad("extron.exporter", "GDL build is available in the desktop app and native CLI."))
+}
+
+#[cfg(target_arch = "wasm32")]
+fn set_exporter(_: &mut Session, _: &Value) -> Result<Value> {
+    Err(bad("extron.setExporter", "GDL build is available in the desktop app and native CLI."))
 }
 
 #[cfg(target_arch = "wasm32")]

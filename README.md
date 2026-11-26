@@ -27,14 +27,18 @@ Buttons and sliders are instances of **master components**: the first one insert
 
 The **Problems** section under the layers lists every export problem of an Extron screen and updates as you edit. Select a problem to select its layer, reveal it in the layers and bring it into view. Export stays blocked until the list is empty.
 
-EXUI export works on its own. Configure the separately distributed Extron exporter 0.8.8 and donor registry before starting the editor or CLI if you plan to build GDL:
+EXUI export works on its own. Building GDL needs the separately distributed Extron exporter 0.8.8 (run with `dotnet`) and a donor registry whose donor GDLs are prepared. GUI Studio looks for them in this order:
+
+1. the environment variables `GUI_STUDIO_EXTRON_CLI` and `GUI_STUDIO_EXTRON_DONORS` (`GUI_STUDIO_DONOR_REGISTRY` also works), set before starting the editor or CLI;
+2. the exporter chosen in the app: **File → Extron → Choose GDL exporter…** asks for `Extron.Cli.dll` and then `donors.json` and keeps them in the preferences;
+3. a `figma-extron-exporter` checkout beside the program or the working folder (or one of their parents), with `output\releases\0.8.8\smoke-kit\cli\Extron.Cli.dll` and the first of the smoke kit's and the checkout's `samples\donors.json` whose donors are prepared.
 
 ```powershell
 $env:GUI_STUDIO_EXTRON_CLI = 'D:\DEV\figma-extron-exporter\output\releases\0.8.8\smoke-kit\cli\Extron.Cli.dll'
 $env:GUI_STUDIO_EXTRON_DONORS = 'D:\DEV\figma-extron-exporter\samples\donors.json'
 ```
 
-Use a new output filename for GDL. The app publishes the output after the converter reports all independent verification checks passed.
+When none is found, **Build GDL…** asks for the exporter first. A registry without a prepared donor for the project's panel is reported with the exporter's `prepare-donor` step. In the app the build runs in the background: a banner says the GDL is being built, the window keeps working, the Extron export actions wait for it, and the result appears as a message. Use a new output filename for GDL. The app publishes the output after the converter reports all independent verification checks passed.
 
 ## Headless export
 

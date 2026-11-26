@@ -469,7 +469,7 @@ fn align_is_unavailable_for_a_child_in_an_auto_layout_flow() {
     let (before_a, before_b) = (at(&s, a), at(&s, b));
     assert_eq!(before_b.x0, 30.0, "the layout placed the second one after the first");
     let doc = s.doc().unwrap();
-    assert!(!can_align(doc, &[b]), "Align is greyed out for one child of the frame");
+    assert!(!can_align(doc, &[b], false), "Align is greyed out for one child of the frame");
     assert!(align_blocked_by_auto_layout(doc, &[b]), "because its frame places it");
     for cmd in ["align.left", "align.hcenter", "align.right", "align.top", "align.vcenter", "align.bottom"] {
         s.execute(cmd, &json!({"ids": [b]})).unwrap();
@@ -485,7 +485,7 @@ fn an_absolute_child_of_an_auto_layout_frame_still_aligns_to_it() {
     let kid = rect(&mut s, f, 20.0, 20.0, "#ff0000");
     set(&mut s, kid, json!({"absolute": true}));
     let doc = s.doc().unwrap();
-    assert!(can_align(doc, &[kid]));
+    assert!(can_align(doc, &[kid], false));
     assert!(!align_blocked_by_auto_layout(doc, &[kid]));
     s.execute("align.right", &json!({"ids": [kid]})).unwrap();
     assert_eq!(s.doc().unwrap().world_bounds(kid).unwrap().x1, 200.0);

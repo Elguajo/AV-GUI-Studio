@@ -169,7 +169,7 @@ fn the_position_fields_follow_edits_and_the_selection() {
     let (mut app, ctx, ids) = setup();
     let x = |app: &FigApp| {
         let ds = app.session.ds().unwrap();
-        crate::right::position_values(&ctx, &ds.doc.clone(), &ds.selection.clone()).x
+        crate::right::position_values(&ctx, &ds.doc.clone(), &ds.selection.clone(), false).x
     };
     assert_eq!(x(&app), None, "mixed");
     app.session.execute("select.set", &json!({"ids": [ids[1]]})).unwrap();
@@ -248,7 +248,7 @@ fn the_align_buttons_are_off_for_a_layer_in_an_auto_layout_flow() {
     let app = FigApp::new(s, Box::new(NoServices));
     let ctx = Context::default();
     let ds = app.session.ds().unwrap();
-    let pv = crate::right::position_values(&ctx, &ds.doc.clone(), &ds.selection.clone());
+    let pv = crate::right::position_values(&ctx, &ds.doc.clone(), &ds.selection.clone(), false);
     assert!(!pv.can_align, "Align is greyed out");
     assert!(pv.align_blocked, "and the tip says the frame places the layer");
 }

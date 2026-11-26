@@ -21,6 +21,7 @@ pub mod cjk;
 pub mod control;
 pub mod dialogs;
 mod extron;
+mod extron_inspector;
 pub mod home;
 pub mod i18n;
 pub mod icons;
@@ -115,6 +116,8 @@ mod export_name_tests;
 #[cfg(test)]
 mod export_preview_tests;
 #[cfg(test)]
+mod extron_inspector_tests;
+#[cfg(test)]
 mod extron_problems_tests;
 #[cfg(test)]
 mod field_ellipsis_tests;
@@ -128,6 +131,8 @@ mod frame_label_tests;
 mod frame_new_from_selection_tests;
 #[cfg(test)]
 mod gap_handle_tests;
+#[cfg(test)]
+mod gdl_build_tests;
 #[cfg(test)]
 mod gradient_shorthand_tests;
 #[cfg(test)]
@@ -166,6 +171,8 @@ mod layers_keys_tests;
 mod layers_rename_tests;
 #[cfg(test)]
 mod layers_wide_names_tests;
+#[cfg(test)]
+mod layout_menu_ui_tests;
 #[cfg(test)]
 mod library_beacon_tests;
 #[cfg(test)]
@@ -579,6 +586,8 @@ pub struct UiState {
     pub(crate) new_project: Option<extron::NewProject>,
     /// The UI kits window, while it is open.
     pub(crate) kits_window: Option<extron::KitsWindow>,
+    /// A GDL being built on a worker thread (File ▸ Extron ▸ Build GDL…).
+    pub(crate) gdl_build: Option<extron::GdlBuild>,
     /// Files the user opened whose fonts are yet to be checked (by document uid).
     pub font_checks: Vec<u64>,
     pub missing_fonts: Option<missing_fonts::Shown>,
@@ -756,6 +765,7 @@ impl Default for UiState {
             problems: extron::Problems::default(),
             new_project: None,
             kits_window: None,
+            gdl_build: None,
             font_checks: Vec::new(),
             missing_fonts: None,
             sampled_color: None,

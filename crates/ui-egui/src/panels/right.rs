@@ -278,6 +278,9 @@ fn design(app: &mut FigApp, ui: &mut Ui) {
     crate::selection_cache::show(&shown, &sel);
     header(app, ui, &shown, &sel);
     widgets::separator(ui);
+    if crate::extron_inspector::section(app, ui, &shown, &sel) {
+        widgets::separator(ui);
+    }
     // Editing a vector with points selected, the points' fields stand in for the layer's position
     // and dimensions.
     let points_selected = vector_edit.as_ref().is_some_and(|ve| !ve.vertices.is_empty() || !ve.segments.is_empty());
@@ -692,10 +695,11 @@ fn rot_of(doc: &Document, n: &Node) -> f64 {
     (figcraft_geom::rotation_degrees(doc.world_transform(n.id)) * 100.0).round() / 100.0
 }
 
-pub(crate) fn position_values(ctx: &egui::Context, doc: &Arc<Document>, sel: &[NodeId]) -> PositionValues {
+/// `to_frame`: the Align to frame setting, which decides what can align.
+pub(crate) fn position_values(ctx: &egui::Context, doc: &Arc<Document>, sel: &[NodeId], to_frame: bool) -> PositionValues {
     let parent = |n: &Node| n.parent.and_then(|p| doc.node(p));
-    crate::selection_cache::cached(ctx, "position", doc, sel, &[], || PositionValues {
-        can_align: figcraft_engine::cmd::arrange::can_align(doc, sel),
+    crate::selection_cache::cached(ctx, "position", doc, sel, &[u64::from(to_frame)], || PositionValues {
+        can_align: figcraft_engine::cmd::arrange::can_align(doc, sel, to_frame),
         align_blocked: figcraft_engine::cmd::arrange::align_blocked_by_auto_layout(doc, sel),
         x: common(doc, sel, |n| x_of(doc, n)),
         y: common(doc, sel, |n| y_of(doc, n)),
@@ -719,7 +723,8 @@ pub(crate) fn tidy_available(ctx: &egui::Context, doc: &Arc<Document>, sel: &[No
 /// Draw alignment and distribution, X/Y and rotation with flip/rotate controls, the
 /// absolute-position toggle and frame constraints.
 fn position_fields(app: &mut FigApp, ui: &mut Ui, doc: &Arc<Document>, sel: &[NodeId]) {
-    let pv = position_values(ui.ctx(), doc, sel);
+    let to_frame = app.session.ds().is_ok_and(|ds| ds.view.align_to_frame);
+    let pv = position_values(ui.ctx(), doc, sel, to_frame);
     let col = widgets::col_width(ui.available_width());
     align_row(app, ui, AlignTarget::Layers(sel), pv.can_align, pv.align_blocked, col);
     position_row(app, ui, doc, sel, &pv, col);
@@ -765,8 +770,11 @@ pub fn align_row(app: &mut FigApp, ui: &mut Ui, target: AlignTarget, can_align: 
             let v = widgets::segmented(ui, &items[3..], None, w).map(|i| i + 3);
             h.or(v)
         });
+        let to_frame = !points && app.session.ds().is_ok_and(|ds| ds.view.align_to_frame);
         let why = if blocked {
             tr("A layer in an auto layout frame is placed by its frame")
+        } else if to_frame {
+            tr("Align to frame is on: select layers inside a frame")
         } else {
             tr("A layer on its own aligns to its frame: select more layers, or one in a frame")
         };
@@ -774,30 +782,70 @@ pub fn align_row(app: &mut FigApp, ui: &mut Ui, target: AlignTarget, can_align: 
         if let Some(i) = picked.inner {
             app.run(cmds[i], params());
         }
-        if count > 2 {
+        // Points distribute from three. Layers always have the menu: Align to frame, distribution
+        // (from three, or from two in one frame), tidy up and the sizes of the first selected.
+        if points && count > 2 {
             let more = icons::button(ui, Icon::DistributeH, 24.0, false, tr("Distribute and tidy"));
             menu_popup(&more).show(|ui| {
-                let can_tidy = !points && app.session.ds().is_ok_and(|ds| tidy_available(ui.ctx(), &ds.doc, &ids));
-                let tidy = (tr("Tidy up"), "arrange.tidy", can_tidy);
-                let entries = [
-                    (tr("Distribute horizontal spacing"), "distribute.horizontal", true),
-                    (tr("Distribute vertical spacing"), "distribute.vertical", true),
-                ];
-                // Points have no tidy up.
-                for (l, c, on) in entries.into_iter().chain((!points).then_some(tidy)) {
-                    let item = ui.add_enabled_ui(on, |ui| menu_item(ui, l, crate::shortcuts::shortcut(c).unwrap_or("")));
-                    if !on {
-                        item.response
-                            .on_disabled_hover_text(tr("Select a row, a column or a full grid of three or more layers, outside an auto layout flow"));
-                    }
-                    if item.inner {
+                for (l, c) in
+                    [(tr("Distribute horizontal spacing"), "distribute.horizontal"), (tr("Distribute vertical spacing"), "distribute.vertical")]
+                {
+                    if menu_item(ui, l, crate::shortcuts::shortcut(c).unwrap_or("")) {
                         app.run(c, params());
                         ui.close();
                     }
                 }
             });
+        } else if !points {
+            let more = icons::button(ui, Icon::DistributeH, 24.0, false, tr("Alignment options"));
+            menu_popup(&more).show(|ui| layer_alignment_menu(app, ui, &ids, to_frame));
         }
     });
+}
+
+/// The alignment row's menu for layers: Align to frame, distribution, tidy up and the sizes of the
+/// first selected layer (GUI Designer's Layout menu).
+fn layer_alignment_menu(app: &mut FigApp, ui: &mut Ui, ids: &[NodeId], to_frame: bool) {
+    let key = |c: &str| crate::shortcuts::shortcut(c).unwrap_or("");
+    if menu_check(ui, to_frame, tr("Align to frame"), key("view.alignToFrame")) {
+        app.run("view.alignToFrame", json!({}));
+        ui.close();
+    }
+    ui.separator();
+    let count = ids.len();
+    let distribute = count > 2 || to_frame && count > 1;
+    let can_tidy = count > 2 && app.session.ds().is_ok_and(|ds| tidy_available(ui.ctx(), &ds.doc, ids));
+    let entries = [
+        (
+            tr("Distribute horizontal spacing"),
+            "distribute.horizontal",
+            distribute,
+            tr("Select three or more layers, or two in a frame with Align to frame on"),
+        ),
+        (
+            tr("Distribute vertical spacing"),
+            "distribute.vertical",
+            distribute,
+            tr("Select three or more layers, or two in a frame with Align to frame on"),
+        ),
+        (tr("Tidy up"), "arrange.tidy", can_tidy, tr("Select a row, a column or a full grid of three or more layers, outside an auto layout flow")),
+        (tr("Same width"), "arrange.sameWidth", count > 1, tr("Select two or more layers: the first one selected sets the size")),
+        (tr("Same height"), "arrange.sameHeight", count > 1, tr("Select two or more layers: the first one selected sets the size")),
+        (tr("Same size"), "arrange.sameSize", count > 1, tr("Select two or more layers: the first one selected sets the size")),
+    ];
+    for (i, (label, cmd, on, why)) in entries.into_iter().enumerate() {
+        if i == 3 {
+            ui.separator();
+        }
+        let item = ui.add_enabled_ui(on, |ui| menu_item_beside_checks(ui, label, key(cmd)));
+        if !on {
+            item.response.on_disabled_hover_text(why);
+        }
+        if item.inner {
+            app.run(cmd, json!({"ids": ids}));
+            ui.close();
+        }
+    }
 }
 
 /// X and Y, and the absolute-position toggle for children of auto layout frames.

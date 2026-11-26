@@ -2,6 +2,7 @@
 
 mod adapter;
 mod author;
+mod control;
 #[cfg(not(target_arch = "wasm32"))]
 mod converter;
 mod demo;
@@ -15,11 +16,15 @@ pub use author::{
     Assigned, ControlKind, Insert, KIT_KEY, MASTER_KEY, NEXT_ID_KEY, NewPage, SyncInstance, add_page, assign, insert, insert_block, panel,
     panel_frame, panel_of, panels, project_kit, project_profile, set_kit,
 };
+pub use control::{ControlEdit, ControlInfo, MAX_CONTROL_ID, control_ids, control_info, edit_control, kind_name};
 #[cfg(not(target_arch = "wasm32"))]
-pub use converter::build;
+pub use converter::{
+    CLI_ENV, EXPORTER_VERSION, Exporter, ExporterSource, REGISTRY_ENV, REGISTRY_ENV_OLD, build, check_exporter, find_exporter, missing_donor,
+};
 pub use demo::document as demo;
 pub use kit::{Block, BlockItem, DEFAULT_KIT, KIT_SCHEMA, Kit, MAX_KIT_BYTES};
-pub use model::{DEFAULT_PROFILE, Diagnostic, PROFILES, Page, Profile, Project, profile};
+pub use metadata::Kind as ElementKind;
+pub use model::{Color, Control, DEFAULT_PROFILE, Diagnostic, Element, PROFILES, Page, Profile, Project, StateRole, profile};
 pub use writer::package;
 
 #[cfg(test)]

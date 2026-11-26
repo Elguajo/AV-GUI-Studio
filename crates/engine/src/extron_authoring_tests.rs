@@ -256,3 +256,108 @@ fn editing_a_master_restyles_every_control_and_undo_brings_the_look_back() {
     s.execute("edit.undo", &json!({})).unwrap();
     assert_eq!(solid(&s, buttons[2]), original);
 }
+
+#[test]
+fn control_ids_and_slider_ranges_are_undoable_edits_refused_when_taken_or_out_of_range() {
+    let mut s = Session::new();
+    s.execute("extron.newPanel", &json!({})).unwrap();
+    let mute = id(&s.execute("extron.insert", &json!({"kind": "button", "x": 40, "y": 100, "name": "Mute", "text": "Mute"})).unwrap());
+    let hdmi = id(&s.execute("extron.insert", &json!({"kind": "button", "x": 260, "y": 100, "name": "HDMI", "text": "HDMI"})).unwrap());
+    let volume = id(&s.execute("extron.insert", &json!({"kind": "slider", "x": 40, "y": 300, "name": "Volume"})).unwrap());
+    let label = id(&s.execute("extron.insert", &json!({"kind": "label", "text": "Room"})).unwrap());
+    let depth = s.undo_depth().0;
+
+    let set = s.execute("extron.setControl", &json!({"ids": [mute], "controlId": 500})).unwrap();
+    let mute_now = &set["controls"][0];
+    assert_eq!(
+        (mute_now["controlId"].as_u64(), mute_now["objectId"].as_u64(), mute_now["key"].as_str()),
+        (Some(500), Some(101), Some("studio.element-101"))
+    );
+    assert_eq!(s.undo_depth().0, depth + 1);
+
+    let refused = |s: &mut Session, p: serde_json::Value, message: &str| {
+        let before = s.undo_depth().0;
+        let error = s.execute("extron.setControl", &p).unwrap_err().to_string();
+        assert!(error.contains(message), "{error}");
+        assert_eq!(s.undo_depth().0, before, "a refused edit leaves no undo step");
+    };
+    refused(&mut s, json!({"ids": [hdmi], "controlId": 500}), "Control ID 500 is already used by \"Mute\".");
+    refused(&mut s, json!({"ids": [hdmi], "controlId": 0}), "Control ID must be 1–65534.");
+    refused(&mut s, json!({"ids": [hdmi], "controlId": 65535}), "Control ID must be 1–65534.");
+    refused(&mut s, json!({"ids": [hdmi], "controlId": 70000}), "`controlId` must be a whole number from 0 to 65535");
+    refused(&mut s, json!({"ids": [label], "controlId": 7}), "Only buttons and sliders have a Control ID; \"Label\" is a label.");
+    refused(&mut s, json!({"ids": [mute, hdmi], "controlId": 7}), "set it on one control at a time");
+    refused(&mut s, json!({"ids": [mute], "min": 1}), "Only sliders have a range; \"Mute\" is a button.");
+    refused(&mut s, json!({"ids": [hdmi]}), "Give controlId, min or max.");
+
+    let range = s.execute("extron.setControl", &json!({"ids": [volume], "min": 10, "max": 90})).unwrap();
+    assert_eq!((range["controls"][0]["min"].as_u64(), range["controls"][0]["max"].as_u64()), (Some(10), Some(90)));
+    refused(&mut s, json!({"ids": [volume], "max": 10}), "Slider maximum must exceed its minimum (10).");
+    assert_eq!(s.execute("extron.validate", &json!({})).unwrap()["valid"], true);
+    let project = gui_studio_extron::project(s.doc().unwrap()).unwrap();
+    let exported = |node| project.pages[0].elements.iter().find(|e| e.node == node).unwrap();
+    assert_eq!(exported(mute).identity.control_id, Some(500), "export takes the new Control ID");
+    assert!(matches!(exported(volume).control, gui_studio_extron::Control::Slider { min: 10, max: 90, .. }));
+
+    // Mute goes back to 101: 500 was a Control ID once, so a new control never gets it.
+    s.execute("extron.setControl", &json!({"ids": [mute], "controlId": 101})).unwrap();
+    assert_eq!(s.execute("extron.insert", &json!({"kind": "shape"})).unwrap()["objectId"], 501);
+    for _ in 0..4 {
+        s.execute("edit.undo", &json!({})).unwrap();
+    }
+    assert_eq!(gui_studio_extron::control_info(s.doc().unwrap(), mute).unwrap().control_id, Some(101));
+    assert_eq!(gui_studio_extron::control_info(s.doc().unwrap(), volume).unwrap().max, Some(100));
+}
+
+#[test]
+fn a_button_shows_another_state_on_the_canvas_without_changing_its_export() {
+    let mut s = Session::new();
+    s.execute("extron.newPanel", &json!({})).unwrap();
+    let mute = id(&s.execute("extron.insert", &json!({"kind": "button", "name": "Mute", "text": "Mute"})).unwrap());
+    let package = |s: &Session| gui_studio_extron::package(&gui_studio_extron::project(s.doc().unwrap()).unwrap()).unwrap();
+    let before = package(&s);
+    let info = gui_studio_extron::control_info(s.doc().unwrap(), mute).unwrap();
+    assert_eq!(info.shown, Some(gui_studio_extron::StateRole::Normal));
+    let roles: Vec<_> = info.states.iter().map(|(role, _)| *role).collect();
+    assert_eq!(roles, gui_studio_extron::StateRole::ALL);
+
+    // The inspector's switch: the instance takes the Active variant's property values.
+    let active = info.states[1].1;
+    let props = crate::components::variant_props(&s.doc().unwrap().node(active).unwrap().name);
+    s.execute("instance.setProperties", &json!({"ids": [mute], "properties": props})).unwrap();
+    let doc = s.doc().unwrap();
+    assert!(matches!(doc.node(mute).unwrap().kind, figcraft_doc::NodeKind::Instance { component, .. } if component == active));
+    let figcraft_doc::NodeKind::Text(caption) = &doc.node(doc.node(mute).unwrap().children[0]).unwrap().kind else { panic!("a caption") };
+    assert_eq!(caption.characters, "Mute", "the caption stays");
+    assert_eq!(gui_studio_extron::control_info(doc, mute).unwrap().shown, Some(gui_studio_extron::StateRole::Feedback));
+    assert_eq!(s.execute("extron.validate", &json!({})).unwrap()["valid"], true);
+    assert_eq!(package(&s), before, "export writes every state whichever one the canvas shows");
+}
+
+#[test]
+fn the_chosen_exporter_is_checked_kept_in_the_preferences_and_reported() {
+    let dir = std::env::temp_dir().join(format!("gui-studio-exporter-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("donors")).unwrap();
+    let cli = dir.join("Extron.Cli.dll");
+    std::fs::write(&cli, b"").unwrap();
+    let registry = dir.join("donors.json");
+    std::fs::write(&registry, r#"{"donors": [{"id": "tlp-pro-1025m", "file": "donors/tlp-pro-1025m.gdl"}]}"#).unwrap();
+    let mut s = Session::new();
+    let p = json!({"cli": cli.to_string_lossy(), "registry": registry.to_string_lossy()});
+    let unprepared = s.execute("extron.setExporter", &p).unwrap_err().to_string();
+    assert!(unprepared.contains("prepare-donor tlp-pro-1025m"), "{unprepared}");
+    assert_eq!(s.prefs.extron_exporter, None, "a refused exporter is not kept");
+
+    std::fs::write(dir.join("donors/tlp-pro-1025m.gdl"), b"").unwrap();
+    s.prefs_unsaved = false;
+    let chosen = s.execute("extron.setExporter", &p).unwrap();
+    assert_eq!(chosen["source"], "settings");
+    assert!(s.prefs_unsaved, "kept at once");
+    assert_eq!(s.prefs.extron_exporter, Some((cli.to_string_lossy().into_owned(), registry.to_string_lossy().into_owned())));
+    if std::env::var_os(gui_studio_extron::CLI_ENV).is_none() {
+        let found = s.execute("extron.exporter", &json!({})).unwrap();
+        assert_eq!((found["source"].as_str(), found["cli"].as_str()), (Some("settings"), cli.to_str()));
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}

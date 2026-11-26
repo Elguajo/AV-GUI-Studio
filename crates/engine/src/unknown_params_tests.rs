@@ -32,8 +32,8 @@ fn a_misspelt_parameter_is_refused_and_named() {
 fn ids_and_id_are_always_taken() {
     let mut s = Session::new();
     let r = crate::params::id_of(&s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap()["id"]).unwrap();
-    assert_eq!(param_names("align.left"), Some(&["ids"][..]));
-    s.execute("align.left", &json!({"id": r})).unwrap();
+    assert_eq!(param_names("arrange.front"), Some(&["ids"][..]));
+    s.execute("arrange.front", &json!({"id": r})).unwrap();
     s.execute("edit.undo", &json!({"ids": []})).unwrap();
 }
 

@@ -309,3 +309,143 @@ Buttons and sliders are instances of one master per kind and kit beside the page
 - The debug CLI kept the demo EXUI at `2B474E44…`. The kits script from `target/kits-evidence/` (two pages, 23 controls, two kits) produced a byte-identical EXUI `11959BBF…` with masters and a GDL with 294/294 checks. A new master-based project (three buttons, a slider and the Room audio block) built a GDL with 131/131 checks. Artifacts are in the local `target/masters-evidence/`.
 - `Cargo.lock` gained `figcraft-layout` (resize constraints) and the dev-only `figcraft-engine` (component sync in tests) for `gui-studio-extron`.
 - Not run: the desktop window was not launched, and no GDL was opened in GUI Designer.
+
+### task-09-r1
+
+Task: Extron section in the inspector and Control ID badges on the canvas.
+Status: COMPLETED
+Freshness: CHECKED (2026-11-26)
+Source: Phase 01 acceptance criterion on the Extron-specific pieces the FigCraft base lacks, and the user's choice (2026-11-26) to work on editing convenience first.
+
+#### Request
+
+```text
+Сперва Extron, потом аудит Figma.
+```
+
+#### Prompt
+
+```text
+Add the Extron pieces the FigCraft inspector lacks. With one Extron control selected, the Design panel shows an Extron section: the control type, Object ID (read-only), Control ID (editable, 1–65534, refused when another control uses it), a slider's minimum and maximum (editable, minimum below maximum), and for a button a Normal / Active / Pressed switch that shows that state's variant on the canvas without changing the export. A selected page shows its touch panel and resolution. Edits are one undo step each and go through an engine command, so the CLI and MCP get them too. Add a View toggle with one key that draws Control ID badges on the canvas: one per addressable control, at a fixed screen size, never over the control's caption. Keep the Aurora demo EXUI hash. The Figma interaction audit follows as a separate step.
+```
+
+#### Freshness check
+
+task-08-r1 is committed in bcdd728. The inspector has no Extron section, and no Control ID badges exist. The only uncommitted change is the unrelated `apps/figcraft/src/window_frame.rs` fix.
+
+#### Current checkpoint
+
+The Extron section and the Control ID badges are in; the interaction audit is recorded below, and its gaps are an open Phase 01 task.
+
+#### Outcome / evidence
+
+- 2026-11-26: `gui_studio_extron::control_info` reads a layer's type, key, IDs, slider range, page profile and a button's state variants; `edit_control` changes the Control ID (1–65534, refused when another control has it; every page's ID counter moves past it, so a later control never gets it) or a slider's range (minimum below maximum). `extron.setControl {ids?, controlId?, min?, max?}` applies it as one undo step, a Control ID on one control at a time.
+- The Design panel shows an Extron section for one selected Extron layer, right under the header: Object ID (read-only) and Control ID for a button or slider, Minimum and Maximum for a slider, a Normal / Active / Pressed switch for a button (it sets the instance's variant properties; the caption override stays and export writes every state), the Object ID of a label or shape, and the touch panel and resolution of a page.
+- View ▸ Control ID badges (`view.controlIds`, Alt+I, kept in the preferences) draws each shown button's and slider's Control ID at a fixed screen size in its top-left corner, or above the control when the corner would cover a caption's ink or the control is too small. Alt+I is pinned in `shortcut_parity_tests` (59 pinned) and `docs/ui-parity.md`.
+- Tests: `control_ids_and_slider_ranges_are_undoable_edits_refused_when_taken_or_out_of_range` and `a_button_shows_another_state_on_the_canvas_without_changing_its_export` (the EXUI package is byte-identical after the switch) in `figcraft-engine`; `extron_inspector_tests` (the Control ID typed in its field is one undo step, the Active switch shows the Active variant, a label has no Control ID field, a page shows `TLP Pro 1025M · 1280 × 800`, the badge toggle) and the badge placement unit test in `figcraft-ui-egui`. The full `gui-studio-extron` (19), `figcraft-engine` (2285 + 51), `figcraft-ui-egui` (1361 + 12) and `figcraft-mcp` (7 + 4 + 69) suites passed, as did Clippy with warnings denied for all targets of the three changed packages and `cargo fmt --check`. The debug CLI kept the demo EXUI at `2B474E44…` (`target/task09-evidence/`).
+- Interaction audit against the Phase 01 checklist (code, keymap and existing tests; `docs/ui-parity.md` holds the measured Figma comparisons): present with tests are cursor-anchored zoom (2%–25,600%, wider than the checklist's 6400%), Ctrl+scroll and Ctrl+plus/minus, Space, middle-button and side-button pan, Shift+0/1/2, click, Shift+click and marquee, Esc, Ctrl+A, Tab, resize handles with Shift (ratio) and Alt (centre), 1/10 px nudges, Alt+drag and Ctrl+D, smart guides to edges and centres, Alt distances, Layers rename (double-click, Ctrl+R, F2), hide, lock, reorder by drag and Ctrl+[ / ], field scrubbing, arithmetic and mixed values, align and distribute, undo and redo, and the Actions palette on Ctrl+/. Gaps: no Match width, height or size; align acts on one layer's parent frame or on several layers' own bounds, never several layers to the panel; the palette lists every command and gives the reason only as an error after running one. Not checked: crisp text at high zoom, and none of it by hand in the window (the running app was an older build with an unsaved document in a minimised window, so it was left alone).
+
+### task-10-r1
+
+Task: Close the interaction audit's gaps: same width, height and size, and align and distribute to the frame.
+Status: COMPLETED
+Freshness: CHECKED (2026-11-26)
+Source: The interaction audit in task-09-r1 and the user's go-ahead to continue (2026-11-26).
+
+#### Request
+
+```text
+Потом сделаем коммит, пока идем дальше.
+```
+
+#### Prompt
+
+```text
+Cover GUI Designer's Layout menu (study §8) on top of the Figma align row. Add Same width, Same height and Same size, which size every selected layer like the first one selected, as one undo step. Add an Align to frame setting, kept like the snapping toggles: when it is on, the six align commands align each selected layer to its own frame (a touch panel page), and Distribute spaces the layers of one frame from its edges, so the outermost touch the frame. Commands take `to: selection|frame` to override the setting. Expose all of it in the Object menu, the Actions palette and the Design panel's alignment row. Showing an unavailable palette command and its reason before it runs needs a precondition mechanism the engine lacks; it is left as a decision for the user.
+```
+
+#### Freshness check
+
+task-09-r1 is complete and uncommitted; the user asked to commit later. `align.*` aligns one layer to its parent frame and several to their combined bounds, and nothing matches sizes.
+
+#### Current checkpoint
+
+Same width, height and size and Align to frame are in. The Actions palette part waits for the user's decision.
+
+#### Outcome / evidence
+
+- 2026-11-26: `arrange.sameWidth`, `arrange.sameHeight` and `arrange.sameSize` `{ids?, reference?}` size every target but the reference (the first selected; the selection keeps click order) through the same property code as `node.set`, as one undo step; fewer than two layers is refused with the reason. An Extron button sized this way keeps a valid export (a `size` override).
+- `view.alignToFrame` (Object ▸ Align to frame, kept in the preferences like the snapping toggles) makes the six `align.*` commands put each layer against its own frame, skipping layers on the page or in an auto layout flow, and makes `distribute.*` move the outermost layers of one frame to its edges and even the gaps (from two layers; layers of different frames are refused). `to: selection|frame` overrides the setting per call; `spacing` keeps the old distribution.
+- The Design panel's alignment row always has a menu for layers (Alignment options): Align to frame with its check mark, Distribute, Tidy up, Same width, Same height and Same size, each greyed out with the reason when the selection cannot use it. The align buttons' disabled tip names Align to frame when it is on. Points keep their Distribute and tidy menu.
+- Tests: `layout_menu_tests` (4, engine) and `layout_menu_ui_tests` (the menu turns on Align to frame, Same width sizes after the first selected, Align right puts both layers against the frame). `unknown_params_tests::ids_and_id_are_always_taken` now uses `arrange.front` as its `{ids?}` example, since the align commands take `to`. The full `figcraft-engine` (2289 + 51), `figcraft-ui-egui` (1362 + 12), `figcraft-mcp` (7 + 4 + 69) and `gui-studio-extron` (19) suites, Clippy with warnings denied and `cargo fmt --check` passed.
+- Not done: the Actions palette still lists every command and gives an unavailable one's reason as an error after it runs. The engine has no way to ask whether a command can run without running it; that is a decision for the user. Not run: the desktop window, and the demo EXUI hash (no export code changed).
+
+### task-11-r1
+
+Task: Port the eframe prototype's identity tests to the master-based editor, with the GDL comparison as an opt-in test.
+Status: COMPLETED
+Freshness: CHECKED (2026-11-26)
+Source: Phase 01 identity-test task and the user's choice (2026-11-26) to defer the palette's unavailable state and continue.
+
+#### Request
+
+```text
+Ок отложи.
+```
+
+#### Prompt
+
+```text
+Port `save_reopen_and_restyle_retains_mute_identity` (tag `eframe-prototype`, `src/project.rs`) to the editor: in a TLP Pro 1025M project built from kit masters, restyling Mute's Active state through its master, reordering the layers and saving and reopening the file keep Mute's key, Object ID, Control ID and state roles, while the exported Active appearance changes. A copy of Mute (Duplicate) never inherits its identity: it is reported until assigned, and assigning gives new IDs. Deleting Mute and inserting a replacement gives new IDs. Port `tests/extron_export.rs` as an ignored test that builds two GDLs through the exporter and compares Mute's ObjectId, ControlId, Comments and PressFeedbackState through `list-controls`; run it here with the 0.8.8 smoke kit.
+```
+
+#### Freshness check
+
+tasks 09 and 10 are complete and uncommitted. The extron crate's converter reads `GUI_STUDIO_EXTRON_CLI` and `GUI_STUDIO_EXTRON_DONORS`; the 0.8.8 smoke kit is at `../figma-extron-exporter/output/releases/0.8.8/smoke-kit`, and its CLI has `list-controls`.
+
+#### Current checkpoint
+
+Both prototype tests are ported; the GDL one passed against the 0.8.8 exporter.
+
+#### Outcome / evidence
+
+- 2026-11-26: `crates/engine/src/extron_identity_tests.rs`. `restyle_reorder_and_reopen_keep_mutes_identity_and_a_copy_or_replacement_never_inherits_it` builds a 1025M project from Aurora masters (HDMI, USB-C, Laptop, Mute, Volume, a title), restyles Mute's Active state on the master, sends Mute to the back and HDMI to the front, saves and reopens the `.figcraft`. Mute keeps its key, Object ID, Control ID and the Normal / Active / Pressed state names; Normal and Pressed keep their fills and Active exports `#3778A5`. Duplicate gives a copy that Problems reports ("Copied Extron assignment needs its own key and IDs.") until `extron.assign` gives it new IDs; deleting Mute and inserting a replacement gives IDs above the copy's, never Mute's.
+- `a_style_only_change_keeps_mutes_gdl_identity` (ignored: needs dotnet, `GUI_STUDIO_EXTRON_CLI` and `GUI_STUDIO_EXTRON_DONORS`) builds two GDLs through the exporter before and after the master restyle and reads Mute back with `list-controls`: `Type` is `PBButton`, and `ObjectId`, `ControlId`, `Comments` and `PressFeedbackState` match while `States` differ. It passed with the 0.8.8 stage kit (`../figma-extron-exporter/output/releases/0.8.8/stage-4811fda9ba304219a951713b18c28f6f`, CLI and `samples/donors.json`); the 0.8.8 `smoke-kit` has no prepared donors (`donor-missing`, run `prepare-donor tlp-pro-1025m`).
+- `gui_studio_extron` exports `Color` for the tests. The full `figcraft-engine` (2290 + 51, 4 ignored) and `gui-studio-extron` (19) suites, Clippy with warnings denied and `cargo fmt --check` passed.
+- Not covered: the GCP half of the acceptance criterion (Mute's action and feedback after reopening the GCP project) still needs GCP, whose Import layout is blocked (study §13.5).
+
+### task-12-r1
+
+Task: Find the Extron exporter without setup and build GDL off the UI thread.
+Status: COMPLETED
+Freshness: CHECKED (2026-11-26)
+Source: Phase 01 task "Restore exporter discovery and run GDL builds off the UI thread" and the user's choice (2026-11-26).
+
+#### Request
+
+```text
+Сборка GDL в фоне
+```
+
+#### Prompt
+
+```text
+Find the exporter in this order: GUI_STUDIO_EXTRON_CLI with GUI_STUDIO_EXTRON_DONORS (the README's name; GUI_STUDIO_DONOR_REGISTRY, the prototype's, also works); the CLI and registry chosen in the app (kept in the preferences); a sibling figma-extron-exporter checkout with the 0.8.8 kit, taking the first registry whose donor files exist (the smoke kit has none prepared). When none is found, File ▸ Extron ▸ Build GDL… asks for Extron.Cli.dll and donors.json and keeps them; File ▸ Extron ▸ Choose GDL exporter… changes them. A missing donor for the project's panel is reported with the exporter's prepare-donor step. In the desktop app the build runs on a worker thread: a banner says the GDL is being built, the window stays responsive, Export EXUI and Build GDL are refused while it runs, and the result arrives as a toast. extron.buildGdl in the CLI and MCP keeps running in place and uses the same discovery.
+```
+
+#### Freshness check
+
+task-11-r1 is complete; tasks 09–11 are uncommitted. `converter::build` reads only the two environment variables, and the app runs the build on the UI thread (about 12 s for the master project). The 0.8.8 `smoke-kit` has no prepared donors; `../figma-extron-exporter/samples/donors.json` and the 0.8.8 stage kit have them.
+
+#### Current checkpoint
+
+The exporter is found without setup, and the app builds GDL on a worker thread.
+
+#### Outcome / evidence
+
+- 2026-11-26: `gui_studio_extron::find_exporter` tries `GUI_STUDIO_EXTRON_CLI` with `GUI_STUDIO_EXTRON_DONORS` (or the prototype's `GUI_STUDIO_DONOR_REGISTRY`; a variable that is set but wrong is reported, not passed over), then the preferences (`Prefs::extron_exporter`), then a sibling `figma-extron-exporter` next to the program or the working folder or their parents: the 0.8.8 smoke kit's CLI with the first of the smoke kit's and the checkout's `samples/donors.json` whose donor files exist. `check_exporter` wants absolute files and at least one prepared donor; `build` now takes the exporter and first reports a missing donor for the project's panel with the `prepare-donor` step.
+- Engine: `extron.buildGdl` uses the discovery (`cmd::extron::find_exporter`); `extron.exporter` reports the exporter and its source or why none was found; `extron.setExporter {cli, registry}` checks and keeps a choice in the preferences.
+- App: Build GDL builds the project on a `gui-studio-gdl` thread; a canvas banner with a spinner says "Building <file>…", Export EXUI, Build GDL and Choose GDL exporter are greyed out in the menu and refused with a message while it runs, and `build_tick` turns the result into a toast. Without an exporter, Build GDL asks for `Extron.Cli.dll` and then `donors.json`; File ▸ Extron ▸ Choose GDL exporter… (`extron.chooseExporter`) does the same alone. The README describes the order.
+- Tests: `converter::tests` (2: sibling discovery with the prepared registry, missing donors and relative paths, and the not-found message), `the_chosen_exporter_is_checked_kept_in_the_preferences_and_reported` (engine), and `gdl_build_tests` (the build runs on its thread, Export EXUI waits, a failing exporter ends in a "GDL build failed." toast and no file). The ignored `a_style_only_change_keeps_mutes_gdl_identity` now finds the exporter as the app does; run with `--include-ignored` and no variables set, it found the sibling checkout here and built both GDLs.
+- The full `figcraft-engine` (2291 + 51), `gui-studio-extron` (21), `figcraft-mcp` and `figcraft-ui-egui` (1363 of 1364 + 12) suites, Clippy with warnings denied and `cargo fmt --check` passed. The one failure, `extron_problems_tests::the_layer_list_stops_above_the_problems_section`, is another session's uncommitted test for its own Problems-section layout change in the same checkout, not part of this task.
+- Not run: the build was not tried by hand in the desktop window, and the file pickers of Choose GDL exporter were not driven in a test.

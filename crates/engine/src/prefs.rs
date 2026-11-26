@@ -123,6 +123,10 @@ pub struct Prefs {
     /// for updates by themselves. A file naming another one doesn't contact its server (#1097).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub team_libraries: Vec<String>,
+    /// The Extron exporter chosen in the app (File ▸ Extron ▸ Choose GDL exporter…): its CLI
+    /// (`Extron.Cli.dll`) and donor registry (`donors.json`). The environment variables win over it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extron_exporter: Option<(String, String)>,
 }
 
 /// Recently run actions kept for the Actions palette (newest first).
@@ -165,6 +169,7 @@ impl Default for Prefs {
             board_grid: Default::default(),
             recent_actions: Vec::new(),
             team_libraries: Vec::new(),
+            extron_exporter: None,
         }
     }
 }

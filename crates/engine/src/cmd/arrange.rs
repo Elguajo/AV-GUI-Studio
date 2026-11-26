@@ -7,63 +7,63 @@ use serde_json::{Value, json};
 use super::edit::{roots, z_sorted};
 use super::{CommandSpec, ok};
 use crate::params::{boolean, get, num, num_or, req_id, req_num, req_targets, string};
-use crate::{Result, Session, bad, spec};
+use crate::{EngineError, Result, Session, bad, spec};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         spec!(
             "align.left",
             "Align left",
-            "{ids?} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
+            "{ids?, to? (selection|frame: each layer to its own frame; default the Align to frame setting)} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
             true,
             |s, p| align(s, p, Al::Left)
         ),
         spec!(
             "align.hcenter",
             "Align horizontal centers",
-            "{ids?} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
+            "{ids?, to? (selection|frame: each layer to its own frame; default the Align to frame setting)} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
             true,
             |s, p| align(s, p, Al::HCenter)
         ),
         spec!(
             "align.right",
             "Align right",
-            "{ids?} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
+            "{ids?, to? (selection|frame: each layer to its own frame; default the Align to frame setting)} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
             true,
             |s, p| align(s, p, Al::Right)
         ),
         spec!(
             "align.top",
             "Align top",
-            "{ids?} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
+            "{ids?, to? (selection|frame: each layer to its own frame; default the Align to frame setting)} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
             true,
             |s, p| align(s, p, Al::Top)
         ),
         spec!(
             "align.vcenter",
             "Align vertical centers",
-            "{ids?} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
+            "{ids?, to? (selection|frame: each layer to its own frame; default the Align to frame setting)} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
             true,
             |s, p| align(s, p, Al::VCenter)
         ),
         spec!(
             "align.bottom",
             "Align bottom",
-            "{ids?} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
+            "{ids?, to? (selection|frame: each layer to its own frame; default the Align to frame setting)} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
             true,
             |s, p| align(s, p, Al::Bottom)
         ),
         spec!(
             "distribute.horizontal",
             "Distribute horizontal spacing",
-            "{ids?, spacing?} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
+            "{ids?, spacing?, to? (selection|frame: the outermost layers to their frame's edges, from two layers of one frame; default the Align to frame setting)} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
             true,
             |s, p| distribute(s, p, true)
         ),
         spec!(
             "distribute.vertical",
             "Distribute vertical spacing",
-            "{ids?, spacing?} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
+            "{ids?, spacing?, to? (selection|frame: the outermost layers to their frame's edges, from two layers of one frame; default the Align to frame setting)} (in vector edit mode without ids: the selected points, and nothing moves with none selected)",
             true,
             |s, p| distribute(s, p, false)
         ),
@@ -75,6 +75,27 @@ pub fn specs() -> Vec<CommandSpec> {
             spacing
         ),
         spec!("arrange.tidy", "Tidy up", "{ids?, spacing?}", true, tidy),
+        spec!(
+            "arrange.sameWidth",
+            "Same width",
+            "{ids?, reference? (the layer whose width the others take; default the first selected)}",
+            true,
+            |s, p| same_size(s, p, "arrange.sameWidth", true, false)
+        ),
+        spec!(
+            "arrange.sameHeight",
+            "Same height",
+            "{ids?, reference? (the layer whose height the others take; default the first selected)}",
+            true,
+            |s, p| same_size(s, p, "arrange.sameHeight", false, true)
+        ),
+        spec!(
+            "arrange.sameSize",
+            "Same size",
+            "{ids?, reference? (the layer whose size the others take; default the first selected)}",
+            true,
+            |s, p| same_size(s, p, "arrange.sameSize", true, true)
+        ),
         spec!(
             "arrange.reorder",
             "Reorder selection",
@@ -207,9 +228,32 @@ pub fn rotate_world(doc: &mut Document, id: NodeId, pivot: Point, deg: f64) -> R
     Ok(())
 }
 
-/// Whether aligning `ids` would move anything: a layer alone on the page has nothing to align to.
-pub fn can_align(doc: &Document, ids: &[NodeId]) -> bool {
-    align_target(doc, &roots(doc, ids)).is_some()
+/// Whether aligning `ids` would move anything: a layer alone on the page has nothing to align to,
+/// and with `to_frame` only layers in a frame (outside an auto layout flow) have one.
+pub fn can_align(doc: &Document, ids: &[NodeId], to_frame: bool) -> bool {
+    let roots = roots(doc, ids);
+    if to_frame { roots.iter().any(|id| frame_of(doc, *id).is_some()) } else { align_target(doc, &roots).is_some() }
+}
+
+/// The bounds of the frame `id` aligns to on its own: its parent, unless that is the page or an
+/// auto layout frame that places it.
+fn frame_of(doc: &Document, id: NodeId) -> Option<Rect> {
+    let parent = doc.node(id)?.parent.filter(|pp| !doc.node(*pp).is_some_and(Node::is_page))?;
+    if in_auto_layout_flow(doc, id) {
+        return None;
+    }
+    Some(doc.world_bounds(parent).unwrap_or_default())
+}
+
+/// Whether `p` asks the align and distribute commands to work in each layer's frame: `to` when
+/// given, else the Align to frame setting.
+fn to_frame(s: &Session, cmd: &str, p: &Value) -> Result<bool> {
+    match string(p, "to").as_deref() {
+        None => Ok(s.ds()?.view.align_to_frame),
+        Some("selection") => Ok(false),
+        Some("frame") => Ok(true),
+        Some(other) => Err(bad(cmd, format!("`to` must be selection or frame (got {other})"))),
+    }
 }
 
 /// Whether `ids` is one layer that its auto layout frame places: Figma greys out Align for it,
@@ -228,13 +272,7 @@ fn in_auto_layout_flow(doc: &Document, id: NodeId) -> bool {
 fn align_target(doc: &Document, roots: &[NodeId]) -> Option<Rect> {
     match roots {
         [] => None,
-        [id] => {
-            let parent = doc.node(*id)?.parent.filter(|pp| !doc.node(*pp).is_some_and(Node::is_page))?;
-            if in_auto_layout_flow(doc, *id) {
-                return None;
-            }
-            Some(doc.world_bounds(parent).unwrap_or_default())
-        }
+        [id] => frame_of(doc, *id),
         _ => Some(doc.bounds_of(roots).unwrap_or_default()),
     }
 }
@@ -253,10 +291,16 @@ fn align(s: &mut Session, p: &Value, a: Al) -> Result<Value> {
         return r;
     }
     let ids = req_targets("align", s, p)?;
+    let frame = to_frame(s, "align", p)?;
     let doc = s.doc_mut()?;
     let ids = roots(doc, &ids);
-    let Some(target) = align_target(doc, &ids) else { return ok() };
+    let shared = if frame { None } else { align_target(doc, &ids) };
+    if !frame && shared.is_none() {
+        return ok();
+    }
     for i in ids {
+        // Each layer to its own frame, or all of them to their shared target.
+        let Some(target) = shared.or_else(|| frame_of(doc, i)) else { continue };
         let Some(b) = doc.world_bounds(i) else { continue };
         let (dx, dy) = match a {
             Al::Left => (target.x0 - b.x0, 0.0),
@@ -276,8 +320,12 @@ fn distribute(s: &mut Session, p: &Value, horizontal: bool) -> Result<Value> {
         return r;
     }
     let ids = req_targets("distribute", s, p)?;
+    let frame = to_frame(s, "distribute", p)? && num(p, "spacing").is_none();
     let doc = s.doc_mut()?;
     let ids = roots(doc, &ids);
+    if frame {
+        return distribute_in_frame(doc, &ids, horizontal);
+    }
     if ids.len() < 3 && num(p, "spacing").is_none() {
         return ok();
     }
@@ -298,6 +346,70 @@ fn distribute(s: &mut Session, p: &Value, horizontal: bool) -> Result<Value> {
             pos += b.height() + gap;
         }
     }
+    ok()
+}
+
+/// Distribute in a frame: the outermost layers move to the frame's edges and the others even the
+/// gaps between them, as GUI Designer's Align to page and Make Same spacing do together. The layers
+/// must share one frame.
+fn distribute_in_frame(doc: &mut Document, ids: &[NodeId], horizontal: bool) -> Result<Value> {
+    let parent = |doc: &Document, id: NodeId| doc.node(id).and_then(|n| n.parent);
+    let first = ids.first().copied();
+    let frame = first.and_then(|f| frame_of(doc, f)).filter(|_| {
+        let shared = first.and_then(|f| parent(doc, f));
+        ids.iter().all(|i| parent(doc, *i) == shared && frame_of(doc, *i).is_some())
+    });
+    let Some(frame) = frame else {
+        return Err(EngineError::Disabled("distribute".into(), "select layers of one frame to distribute them in it".into()));
+    };
+    if ids.len() < 2 {
+        return ok();
+    }
+    let along = |b: &Rect| if horizontal { (b.x0, b.width()) } else { (b.y0, b.height()) };
+    let mut items: Vec<(NodeId, Rect)> = ids.iter().filter_map(|i| doc.world_bounds(*i).map(|b| (*i, b))).collect();
+    items.sort_by(|a, b| along(&a.1).0.total_cmp(&along(&b.1).0));
+    let total: f64 = items.iter().map(|(_, b)| along(b).1).sum();
+    let (mut pos, span) = along(&frame);
+    let gap = (span - total) / (items.len() - 1) as f64;
+    for (i, b) in items {
+        let (at, len) = along(&b);
+        if horizontal {
+            move_world(doc, i, pos - at, 0.0)?;
+        } else {
+            move_world(doc, i, 0.0, pos - at)?;
+        }
+        pos += len + gap;
+    }
+    ok()
+}
+
+/// Same width, height or size: every target but the reference (the first selected unless
+/// `reference` names one) takes the reference's width and/or height, as the Design panel's fields
+/// set them.
+fn same_size(s: &mut Session, p: &Value, cmd: &str, width: bool, height: bool) -> Result<Value> {
+    let ids = req_targets(cmd, s, p)?;
+    let reference = match get(p, "reference") {
+        None | Some(Value::Null) => *ids.first().ok_or_else(|| bad(cmd, "nothing to size"))?,
+        Some(v) => crate::params::id_of(v).ok_or_else(|| bad(cmd, "`reference` must be a node id"))?,
+    };
+    let doc = s.doc_mut()?;
+    let others: Vec<NodeId> = roots(doc, &ids).into_iter().filter(|i| *i != reference).collect();
+    if others.is_empty() {
+        return Err(EngineError::Disabled(cmd.into(), "select two or more layers: the first one selected sets the size".into()));
+    }
+    let r = doc.get(reference)?;
+    let mut props = serde_json::Map::new();
+    if width {
+        props.insert("width".into(), json!(r.width));
+    }
+    if height {
+        props.insert("height".into(), json!(r.height));
+    }
+    let before = crate::cmd::styles::bound_before(doc, &others);
+    for i in others {
+        crate::cmd::props::apply(cmd, doc, i, &props)?;
+    }
+    crate::cmd::styles::detach_edited(doc, &before);
     ok()
 }
 

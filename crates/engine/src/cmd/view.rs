@@ -40,10 +40,12 @@ const TOGGLES: &[(&str, Slot, bool)] = &[
     ("view.outlinesObjectBounds", |v| &mut v.outline_bounds, true),
     ("view.maskOutlines", |v| &mut v.mask_outlines, true),
     ("view.frameOutlines", |v| &mut v.frame_outlines, true),
+    ("view.controlIds", |v| &mut v.control_ids, true),
     ("view.proofSrgb", |v| &mut v.proof_srgb, false),
     ("view.snapGeometry", |v| &mut v.snap_geometry, true),
     ("view.snapObjects", |v| &mut v.snap_objects, true),
     ("view.snapPixel", |v| &mut v.snap_pixel, true),
+    ("view.alignToFrame", |v| &mut v.align_to_frame, true),
 ];
 
 /// View toggle `id`: the file's view changes, and the preferences remember a kept one.
@@ -353,6 +355,13 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!("view.pixelPreview", "Pixel preview", "{on?, scale? (1|2: rendered pixels per page pixel; turns it on)}", false, pixel_preview),
         spec!("view.frameOutlines", "Frame outlines", "{on?}", false, |s, p| toggle(s, p, "view.frameOutlines")),
         spec!(
+            "view.controlIds",
+            "Control ID badges",
+            "{on?}  a badge with its Control ID by every Extron button and slider, clear of its caption",
+            false,
+            |s, p| toggle(s, p, "view.controlIds")
+        ),
+        spec!(
             "view.proofSrgb",
             "Soft-proof sRGB",
             "{on?}  mark the colours of a Display P3 file that sRGB screens and files can't show",
@@ -362,6 +371,13 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!("view.snapGeometry", "Snap to geometry", "{on?}", false, |s, p| toggle(s, p, "view.snapGeometry")),
         spec!("view.snapObjects", "Snap to objects", "{on?}", false, |s, p| toggle(s, p, "view.snapObjects")),
         spec!("view.snapPixel", "Snap to pixel grid", "{on?}", false, |s, p| toggle(s, p, "view.snapPixel")),
+        spec!(
+            "view.alignToFrame",
+            "Align to frame",
+            "{on?}  align and distribute put each layer in its own frame (a touch panel page) instead of lining the selection up",
+            false,
+            |s, p| toggle(s, p, "view.alignToFrame")
+        ),
         spec!("view.toggleUi", "Show/Hide UI", "{on?}", false, |s, p| flag(s, p, |v| &mut v.ui_hidden)),
         spec!(
             "view.minimize",

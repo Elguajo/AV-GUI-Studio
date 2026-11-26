@@ -36,11 +36,16 @@ pub struct ViewState {
     /// Others' cursors in a live session (View ▸ Multiplayer cursors).
     pub multiplayer_cursors: bool,
     pub frame_outlines: bool,
+    /// Extron Control ID badges over the touch panel controls (View ▸ Control ID badges).
+    pub control_ids: bool,
     /// Soft-proof sRGB: the canvas marks the colours of a Display P3 file that sRGB can't show.
     pub proof_srgb: bool,
     pub snap_geometry: bool,
     pub snap_objects: bool,
     pub snap_pixel: bool,
+    /// Align and distribute put each layer in its own frame instead of lining the selection up
+    /// (Object ▸ Align to frame), as GUI Designer's Align to page does.
+    pub align_to_frame: bool,
     pub ui_hidden: bool,
     /// Minimized interface (Shift+Cmd/Ctrl+\): the navigation bar and both sidebars are collapsed
     /// and the toolbar stays; the right sidebar shows while something is selected.
@@ -70,10 +75,12 @@ impl Default for ViewState {
             comments: true,
             multiplayer_cursors: true,
             frame_outlines: false,
+            control_ids: false,
             proof_srgb: false,
             snap_geometry: true,
             snap_objects: true,
             snap_pixel: true,
+            align_to_frame: false,
             ui_hidden: false,
             ui_minimized: false,
         }

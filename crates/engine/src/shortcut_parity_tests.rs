@@ -121,6 +121,7 @@ static ROWS: &[Row] = &[
     pin(Tools, "tool.slice", &["S"], &[]),
     // Illustrator's Artboard tool key, for a new page of an Extron touch panel project.
     pin(Tools, "tool.artboard", &["Shift+O"], &[]),
+    pin(View, "view.controlIds", &["Alt+I"], &[]),
     pin(Tools, "file.placeImage", &["Shift+Cmd+K"], &[]),
     pin(Tools, "tool.shapeBuilder", &["Shift+M"], &[]),
     // Board tools (boards only), on keys no design-file shortcut uses.
@@ -419,7 +420,7 @@ fn counts_match_the_docs() {
     let reserved = documented.iter().filter(|r| !r.reserved.is_empty()).count();
     let pinned = ROWS.len() - documented.len();
     // docs/ui-parity.md quotes these.
-    assert_eq!((documented.len(), bound, moved, missing, reserved, pinned), (137, 136, 1, 0, 2, 58));
+    assert_eq!((documented.len(), bound, moved, missing, reserved, pinned), (137, 136, 1, 0, 2, 59));
 }
 
 #[test]

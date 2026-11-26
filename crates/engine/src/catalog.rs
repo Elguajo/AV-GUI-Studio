@@ -32,6 +32,7 @@ pub static MENU: &[MenuItem] = &[
     m!("File/Extron", "Validate screen", "extron.validate"),
     m!("File/Extron", "Export EXUI…", "extron.exportExui"),
     m!("File/Extron", "Build GDL…", "extron.buildGdl"),
+    m!("File/Extron", "Choose GDL exporter…", "extron.chooseExporter"),
     m!("File", "New board", "file.newBoard"),
     // FigCraft's own: boards and starter templates (not counted by `parity`, like the other items
     // of its own listed in `OWN`).
@@ -112,6 +113,8 @@ pub static MENU: &[MenuItem] = &[
     m!("View", "Pixel preview", "view.pixelPreview"),
     m!("View", "Mask outlines", "view.maskOutlines"),
     m!("View", "Frame outlines", "view.frameOutlines"),
+    // GUI Studio's own: the Extron Control IDs on the canvas.
+    m!("View", "Control ID badges", "view.controlIds"),
     // FigCraft's own: the canvas shows sRGB, so Display P3 files can mark what it can't show.
     m!("View", "Soft-proof sRGB", "view.proofSrgb"),
     m!("View", SEP, ""),
@@ -169,6 +172,13 @@ pub static MENU: &[MenuItem] = &[
     m!("Object", "Bring forward", "arrange.forward"),
     m!("Object", "Send backward", "arrange.backward"),
     m!("Object", "Send to back", "arrange.back"),
+    m!("Object", SEP, ""),
+    // GUI Studio's own, from GUI Designer's Layout menu: sizes after the first selected layer,
+    // and aligning each layer to its frame.
+    m!("Object", "Same width", "arrange.sameWidth"),
+    m!("Object", "Same height", "arrange.sameHeight"),
+    m!("Object", "Same size", "arrange.sameSize"),
+    m!("Object", "Align to frame", "view.alignToFrame"),
     m!("Object", SEP, ""),
     m!("Object", "Flip horizontal", "object.flipH"),
     m!("Object", "Flip vertical", "object.flipV"),
@@ -325,6 +335,12 @@ const OWN: &[&str] = &[
     "extron.validate",
     "extron.exportExui",
     "extron.buildGdl",
+    "extron.chooseExporter",
+    "view.controlIds",
+    "arrange.sameWidth",
+    "arrange.sameHeight",
+    "arrange.sameSize",
+    "view.alignToFrame",
 ];
 
 /// Coverage: (implemented, total, missing ids). `extra` lists ids implemented by the UI layer.
