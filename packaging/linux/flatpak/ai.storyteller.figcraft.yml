@@ -50,7 +50,7 @@ modules:
       env:
         CARGO_HOME: /run/build/figcraft/cargo
         CARGO_NET_OFFLINE: 'true'
-        # .cargo/config.toml points CRAFT_FONTS_DIR at ../craft-fonts for local builds; there is
+        # .cargo/config.toml points CRAFT_FONTS_DIR at .tools/craft-fonts for local builds; there is
         # none here, so build without it (a warning, not an error).
         CRAFT_FONTS_DIR: /nonexistent
     build-commands:

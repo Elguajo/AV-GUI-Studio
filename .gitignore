@@ -2,6 +2,8 @@
 plan/
 plans/
 /target/
+# Toolchain, MinGW, Cargo cache and fonts installed by scripts/bootstrap.ps1.
+/.tools/
 /target-*/
 /plugins/target/
 /dist/

@@ -1,0 +1,9 @@
+# The one Rust version every build of this repository uses: local (scripts/bootstrap.ps1 installs
+# it into .tools/), CI and agents. The workspace still declares `rust-version = "1.95"` as its
+# minimum. Bump the channel here and in nowhere else.
+[toolchain]
+channel = "1.100.0"
+profile = "minimal"
+components = ["rustfmt", "clippy"]
+# `cargo xtask wasm` checks the web build and the plug-in examples.
+targets = ["wasm32-unknown-unknown"]
