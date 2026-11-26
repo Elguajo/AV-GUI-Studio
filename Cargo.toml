@@ -2,7 +2,7 @@
 resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
 # The plugin SDK and examples build for wasm32 in a workspace of their own (`cargo xtask plugins`).
-exclude = ["plugins"]
+exclude = ["plugins", "vendor"]
 # default-members = ["crates/*", "apps/figcraft", "apps/figcraft-cli", "xtask"]
 
 [workspace.package]
@@ -187,7 +187,8 @@ emath = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571
 epaint = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
 epaint_default_fonts = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
 egui = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
-egui-winit = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+# egui-winit is vendored with one change (no repaint when the window moves); see vendor/egui-winit/VENDORED.md.
+egui-winit = { path = "vendor/egui-winit" }
 egui-wgpu = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
 egui_glow = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
 egui_extras = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
@@ -201,3 +202,8 @@ winit = { git = "https://github.com/storytold/winit.git", rev = "a517b3846ee8457
 # craft-libs' vendored krilla 0.8.2: decoded PNGs are capped at 1 GiB and reserved fallibly, and a
 # panic while drawing unwinds without aborting.
 krilla = { git = "https://github.com/storytold/craft-libs", rev = "a49329e71e32ad93794ab595c41f33209a7d2220" }
+
+# eframe depends on egui-winit inside the egui repository, which `[patch.crates-io]` does not reach:
+# substitute the vendored copy for that source as well, so there is one egui-winit.
+[patch."https://github.com/storytold/egui.git"]
+egui-winit = { path = "vendor/egui-winit" }
