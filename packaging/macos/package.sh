@@ -65,7 +65,7 @@ rm -rf "$WORK"
 mkdir -p "$WORK/bin"
 for bin in "${BINS[@]}"; do
   inputs=()
-  for t in "${TARGETS[@]}"; do inputs+=("$CARGO_TARGET_DIR/$t/release/$bin"); done
+  for t in "${TARGETS[@]}"; do inputs+=("$CARGO_TARGET_DIR/$t/release/$(cargo_out "$bin")"); done
   lipo -create -output "$WORK/bin/$bin" "${inputs[@]}"
   lipo -info "$WORK/bin/$bin"
 done

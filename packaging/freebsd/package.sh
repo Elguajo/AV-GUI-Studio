@@ -84,8 +84,8 @@ if [[ "$DRY_RUN" = 1 ]]; then
   OUT_DIR="$WORK"
   mkdir -p "$BIN"
   for b in "${BINS[@]}"; do
-    printf '#!/bin/sh\necho "%s %s (dry-run stub)"\n' "$b" "$VERSION" >"$BIN/$b"
-    chmod 755 "$BIN/$b"
+    printf '#!/bin/sh\necho "%s %s (dry-run stub)"\n' "$b" "$VERSION" >"$BIN/$(cargo_out "$b")"
+    chmod 755 "$BIN/$(cargo_out "$b")"
   done
 fi
 
@@ -94,7 +94,7 @@ fi
 mkdir -p "$STAGE/bin" "$STAGE/share/applications" "$STAGE/share/mime/packages" \
   "$STAGE/share/metainfo" "$STAGE/share/icons" "$STAGE/share/doc/figcraft"
 for b in "${BINS[@]}"; do
-  install -m 755 "$BIN/$b" "$STAGE/bin/"
+  install -m 755 "$BIN/$(cargo_out "$b")" "$STAGE/bin/$b"
   strip "$STAGE/bin/$b" 2>/dev/null || true
 done
 # The desktop entry, MIME type, metainfo and icons are the freedesktop files Linux ships. The

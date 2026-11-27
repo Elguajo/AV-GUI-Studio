@@ -56,6 +56,16 @@ CARGO_PKGS=()
 for _bin in "${BINS[@]}"; do CARGO_PKGS+=(-p "$_bin"); done
 unset _bin
 
+# BINS are Cargo package names and the names packages install; Cargo writes each package's binary
+# under its [[bin]] name (apps/*/Cargo.toml). Keep this map in step with those.
+cargo_out() {
+  case "$1" in
+    figcraft) echo gui-studio ;;
+    figcraft-cli) echo gui-studio-cli ;;
+    *) echo "error: no Cargo output name for $1" >&2; return 1 ;;
+  esac
+}
+
 # The binary used for a `--version` smoke test: the CLI when shipped, else the app (which answers
 # --version before opening a window).
 smoke_bin() {

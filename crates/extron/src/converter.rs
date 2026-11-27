@@ -84,12 +84,12 @@ pub fn missing_donor(exporter: &Exporter, profile: &str) -> Option<String> {
 /// parents, with the [`EXPORTER_VERSION`] kit and the first registry whose donors are prepared. A
 /// variable that is set must be right: it is reported rather than passed over.
 pub fn find_exporter(settings: Option<(&Path, &Path)>, near: &[PathBuf]) -> Result<Exporter, String> {
-    let var = |name: &str| std::env::var_os(name).filter(|v| !v.is_empty()).map(PathBuf::from);
-    if let Some(cli) = var(CLI_ENV) {
-        let registry = var(REGISTRY_ENV)
-            .or_else(|| var(REGISTRY_ENV_OLD))
-            .ok_or_else(|| format!("{CLI_ENV} is set: set {REGISTRY_ENV} to the donor registry too."))?;
-        return check_exporter(&cli, &registry, ExporterSource::Environment).map_err(|e| format!("{e} (from {CLI_ENV} and {REGISTRY_ENV})"));
+    if let Some(cli) = env_path(CLI_ENV) {
+        let registry = env_path(REGISTRY_ENV)
+            .or_else(|| env_path(REGISTRY_ENV_OLD))
+            .ok_or_else(|| format!("{CLI_ENV} is set: set {REGISTRY_ENV} to the donor registry too, or unset {CLI_ENV}."))?;
+        return check_exporter(&cli, &registry, ExporterSource::Environment)
+            .map_err(|e| format!("{e} (from {CLI_ENV} and {REGISTRY_ENV}: correct them, or unset {CLI_ENV} to use the exporter chosen in the app)"));
     }
     if let Some(found) = settings.and_then(|(cli, registry)| check_exporter(cli, registry, ExporterSource::Settings).ok()) {
         return Ok(found);
@@ -111,6 +111,16 @@ pub fn find_exporter(settings: Option<(&Path, &Path)>, near: &[PathBuf]) -> Resu
     Err(format!(
         "The Extron exporter {EXPORTER_VERSION} was not found. Choose its Extron.Cli.dll and donors.json (File ▸ Extron ▸ Choose GDL exporter…), or set {CLI_ENV} and {REGISTRY_ENV}."
     ))
+}
+
+fn env_path(name: &str) -> Option<PathBuf> {
+    std::env::var_os(name).filter(|v| !v.is_empty()).map(PathBuf::from)
+}
+
+/// Whether [`CLI_ENV`] is set: [`find_exporter`] then uses the environment only, whatever the
+/// app's settings hold, so choosing an exporter in the app can't fix an error it reports.
+pub fn exporter_from_environment() -> bool {
+    env_path(CLI_ENV).is_some()
 }
 
 /// Build `project` as a GDL at `output` with `exporter`, publishing the file only after the

@@ -536,7 +536,8 @@ fn identify(doc: &mut Document, node: NodeId, kind: ControlKind) -> Result<Assig
 
 /// The next Object ID: above every panel's stored counter and every ID in the document (a demo or
 /// an older file has no counter yet). Every panel's counter then moves past it, so removing a page
-/// never brings back the IDs it handed out.
+/// never brings back the IDs it handed out. Once the counter reaches the top (a Control ID set
+/// near 65534 moves it there), the lowest ID no layer holds is handed out instead.
 fn allocate(doc: &mut Document) -> Result<u16, String> {
     let panels = panels(doc);
     let stored = panels
@@ -546,18 +547,19 @@ fn allocate(doc: &mut Document) -> Result<u16, String> {
         .filter_map(|value| value.parse::<u32>().ok())
         .max()
         .unwrap_or(0);
-    let used = doc
+    let used: std::collections::BTreeSet<u16> = doc
         .nodes()
         .filter_map(|n| n.plugin_data.get(KEY))
         .filter_map(|raw| serde_json::from_str::<Metadata>(raw).ok())
         .flat_map(|data| [data.object_id, data.control_id])
         .flatten()
-        .map(u32::from)
-        .max()
-        .unwrap_or(0);
-    let next = stored.max(used + 1).max(u32::from(PAGE_OBJECT_ID) + 1);
+        .collect();
+    let highest = used.last().map_or(0, |id| u32::from(*id));
+    let next = stored.max(highest + 1).max(u32::from(PAGE_OBJECT_ID) + 1);
     // 65535 is the donor's Offline popup (figma-extron-exporter `docs/exui-v2.md`).
-    let id = u16::try_from(next).ok().filter(|id| *id < u16::MAX).ok_or("No Object IDs remain in this project.")?;
+    let Some(id) = u16::try_from(next).ok().filter(|id| *id < u16::MAX) else {
+        return (PAGE_OBJECT_ID + 1..u16::MAX).find(|id| !used.contains(id)).ok_or_else(|| "No Object IDs remain in this project.".into());
+    };
     for panel in panels {
         if let Some(frame) = doc.node_mut(panel) {
             frame.plugin_data.insert(NEXT_ID_KEY.into(), (next + 1).to_string());

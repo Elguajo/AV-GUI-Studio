@@ -176,7 +176,12 @@ fn polylines_with_limit(path: &BezPath, limit: usize) -> Option<Vec<Polyline>> {
             }
             PathEl::ClosePath => {
                 count += 1;
-                cur.push(start);
+                // A last point within rounding of the start (a flattened circle's) becomes it
+                // exactly, which `push` would skip as a duplicate.
+                match cur.points.last_mut() {
+                    Some(last) if (*last - start).hypot() <= 1e-9 => *last = start,
+                    _ => cur.push(start),
+                }
                 cur.closed = cur.points.len() >= 3;
                 pen = start;
                 finish(&mut cur, &mut out);

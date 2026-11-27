@@ -80,7 +80,7 @@ pub fn specs() -> Vec<CommandSpec> {
             set_control
         ),
         spec!("extron.validate", "Validate screen", "{}", false, validate),
-        spec!("extron.exportExui", "Export EXUI…", "{path}", false, export),
+        spec!("extron.exportExui", "Export EXUI…", "{path? (.exui)} → {path, pages, elements}; returns base64 `data` without a path", false, export),
         spec!("extron.buildGdl", "Build GDL…", "{path}", false, build),
         spec!(
             "extron.exporter",
@@ -478,12 +478,19 @@ fn output_path(cmd: &str, p: &Value, extension: &str) -> Result<PathBuf> {
 }
 
 fn export(s: &mut Session, p: &Value) -> Result<Value> {
+    use base64::Engine as _;
     let cmd = "extron.exportExui";
-    let path = output_path(cmd, p, "exui")?;
+    let path = if string(p, "path").is_some() { Some(output_path(cmd, p, "exui")?) } else { None };
     let project = gui_studio_extron::project(s.doc()?).map_err(|items| bad(cmd, diagnostics(&items)))?;
     let bytes = gui_studio_extron::package(&project).map_err(|error| bad(cmd, error))?;
+    let (pages, elements) = (project.pages.len(), elements(&project));
+    let Some(path) = path else {
+        // Where files are saved as downloads (the browser), the bytes go back to the caller.
+        let data = base64::engine::general_purpose::STANDARD.encode(&bytes);
+        return Ok(json!({"format": "exui", "pages": pages, "elements": elements, "data": data}));
+    };
     file_access::write(&path, &bytes)?;
-    Ok(json!({"path": path, "pages": project.pages.len(), "elements": elements(&project)}))
+    Ok(json!({"path": path, "pages": pages, "elements": elements}))
 }
 
 #[cfg(not(target_arch = "wasm32"))]

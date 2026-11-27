@@ -64,7 +64,7 @@ rm -rf "$WORK"
 
 # ---- stage an FHS tree (shared by every format) -------------------------------------------------
 for bin in "${BINS[@]}"; do
-  install -Dm755 "$BIN/$bin" "$STAGE/usr/bin/$bin"
+  install -Dm755 "$BIN/$(cargo_out "$bin")" "$STAGE/usr/bin/$bin"
   "${CROSS_COMPILE:-}strip" "$STAGE/usr/bin/$bin" 2>/dev/null || true
 done
 install -Dm644 "$HERE/$APP_ID.desktop" "$STAGE/usr/share/applications/$APP_ID.desktop"

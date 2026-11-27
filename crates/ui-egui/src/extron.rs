@@ -251,9 +251,24 @@ pub(crate) fn save(app: &mut FigApp, id: &str) {
         }
         #[cfg(not(target_arch = "wasm32"))]
         if let Err(why) = figcraft_engine::cmd::extron::find_exporter(&app.session) {
-            choose_exporter(app, true, Some(why));
+            // The environment overrides the app's choice: picking another exporter can't help.
+            if exporter_variable().is_some() {
+                app.toast(why);
+            } else {
+                choose_exporter(app, true, Some(why));
+            }
             return;
         }
+    }
+    // Where files are saved as downloads (the browser has no save dialog), the EXUI is one.
+    if id == "extron.exportExui" && app.services.downloads() {
+        let file = format!("{name}.{ext}");
+        if let Some(result) = app.run(id, json!({}))
+            && app.download(&file, &result)
+        {
+            app.toast(tr("EXUI exported."));
+        }
+        return;
     }
     app.pick_save(title, &format!("{name}.{ext}"), &[ext], move |app, path| {
         #[cfg(not(target_arch = "wasm32"))]
@@ -332,6 +347,14 @@ fn widgets_banner(ctx: &Context, canvas: Rect, add: impl FnOnce(&mut Ui)) {
     crate::widgets::canvas_banner(ctx, egui::Id::unique("extron_gdl_build"), canvas, add);
 }
 
+/// The environment variable that names the exporter, when it is set: it wins over the app's choice.
+fn exporter_variable() -> Option<&'static str> {
+    #[cfg(not(target_arch = "wasm32"))]
+    return figcraft_engine::gui_studio_extron::exporter_from_environment().then_some(figcraft_engine::gui_studio_extron::CLI_ENV);
+    #[cfg(target_arch = "wasm32")]
+    None
+}
+
 /// File ▸ Extron ▸ Choose GDL exporter…: pick the exporter's Extron.Cli.dll, then its donor
 /// registry, and keep them. With `then_build`, Build GDL goes on once they are chosen; `why` says
 /// first why the exporter is asked for.
@@ -347,6 +370,8 @@ pub(crate) fn choose_exporter(app: &mut FigApp, then_build: bool, why: Option<St
             }
             if then_build {
                 save(app, "extron.buildGdl");
+            } else if let Some(var) = exporter_variable() {
+                app.toast(trf("GDL exporter chosen. {var} is set and is used instead until it is unset.", &[("var", &var)]));
             } else {
                 app.toast(tr("GDL exporter chosen."));
             }

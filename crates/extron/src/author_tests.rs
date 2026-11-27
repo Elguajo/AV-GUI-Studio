@@ -45,6 +45,22 @@ fn a_new_panel_takes_every_control_with_presets_and_exports() {
 }
 
 #[test]
+fn a_control_id_at_the_top_of_the_range_leaves_object_ids_to_hand_out() {
+    let mut doc = panel("Huddle Room", DEFAULT_PROFILE, &Kit::default_kit().unwrap()).unwrap();
+    let mute = add(&mut doc, ControlKind::Button);
+    let top = crate::MAX_CONTROL_ID;
+    crate::edit_control(&mut doc, mute.node, crate::ControlEdit { control_id: Some(top), ..Default::default() }).unwrap();
+    // The counter moved past the highest Control ID: the next layer takes the lowest free ID.
+    let label = add(&mut doc, ControlKind::Label);
+    assert_eq!(label.object_id, 102);
+
+    crate::edit_control(&mut doc, mute.node, crate::ControlEdit { control_id: Some(101), ..Default::default() }).unwrap();
+    let shape = add(&mut doc, ControlKind::Shape);
+    assert_eq!(shape.object_id, 103, "IDs still in use are skipped");
+    project(&doc).unwrap();
+}
+
+#[test]
 fn ids_of_deleted_controls_are_never_handed_out_again() {
     let mut doc = panel("Huddle Room", DEFAULT_PROFILE, &Kit::default_kit().unwrap()).unwrap();
     add(&mut doc, ControlKind::Label);

@@ -48,3 +48,19 @@ fn a_gdl_builds_on_a_worker_thread_and_its_result_arrives_as_a_toast() {
     assert!(!dir.join("room.gdl").exists(), "a failed build writes no GDL");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn where_files_are_downloads_export_exui_downloads_the_package() {
+    use crate::variables_export_ui_tests::{Browser, Downloads};
+    let mut s = Session::new();
+    s.execute("extron.demo", &json!({})).unwrap();
+    let got = Downloads::default();
+    let mut app = crate::FigApp::new(s, Box::new(Browser { got: got.clone(), deliver: true }));
+    crate::extron::save(&mut app, "extron.exportExui");
+    let got = got.lock().unwrap();
+    let [(name, bytes)] = got.as_slice() else { panic!("one download, got {}", got.len()) };
+    assert!(name.ends_with(".exui"), "{name}");
+    let project = figcraft_engine::gui_studio_extron::project(app.session.doc().unwrap()).unwrap();
+    assert_eq!(bytes, &figcraft_engine::gui_studio_extron::package(&project).unwrap());
+    assert_eq!(app.ui.toast.as_ref().map(|(m, _)| m.as_str()), Some("EXUI exported."));
+}

@@ -19,7 +19,8 @@ pub use author::{
 pub use control::{ControlEdit, ControlInfo, MAX_CONTROL_ID, control_ids, control_info, edit_control, kind_name};
 #[cfg(not(target_arch = "wasm32"))]
 pub use converter::{
-    CLI_ENV, EXPORTER_VERSION, Exporter, ExporterSource, REGISTRY_ENV, REGISTRY_ENV_OLD, build, check_exporter, find_exporter, missing_donor,
+    CLI_ENV, EXPORTER_VERSION, Exporter, ExporterSource, REGISTRY_ENV, REGISTRY_ENV_OLD, build, check_exporter, exporter_from_environment,
+    find_exporter, missing_donor,
 };
 pub use demo::document as demo;
 pub use kit::{Block, BlockItem, DEFAULT_KIT, KIT_SCHEMA, Kit, MAX_KIT_BYTES};
