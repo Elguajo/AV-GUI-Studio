@@ -15,16 +15,18 @@
          .exe need an .exe icon identifier (ICE50), even when the source is an ICO. -->
     <Icon Id="FigcraftIcon.exe" SourceFile="$(var.IconPath)" />
     <Property Id="ARPPRODUCTICON" Value="FigcraftIcon.exe" />
-    <Property Id="ARPURLINFOABOUT" Value="https://getartcraft.com/apps/figcraft" />
-    <Property Id="ARPURLUPDATEINFO" Value="https://getartcraft.com/apps/figcraft" />
-    <Property Id="ARPHELPLINK" Value="https://discord.gg/artcraft" />
+    <!-- Installed apps links: the repository from [workspace.package] in Cargo.toml. -->
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/Elguajo/GUI-Studio" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/Elguajo/GUI-Studio/releases" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/Elguajo/GUI-Studio/issues" />
 
+    <!-- One folder, Programs\GUI Studio or Program Files\GUI Studio: the same place the wizard's
+         CraftDefault*Folder actions (install-policy.wxi) choose, so silent installs agree with it. -->
     <StandardDirectory Id="ProgramFiles6432Folder">
-      <Directory Id="CraftSuiteFolder" Name="GUI Studio">
-        <Directory Id="INSTALLFOLDER" Name="GUI Studio" />
-      </Directory>
+      <Directory Id="INSTALLFOLDER" Name="GUI Studio" />
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
 
     <!-- An upgrade installs where the user put the previous version (written by FigcraftApp). -->
 
@@ -71,6 +73,7 @@
         <File Id="FigcraftNotice" Source="$(var.BinDir)\NOTICE" KeyPath="no" />
         <File Id="FigcraftExe" Source="$(var.BinDir)\gui-studio.exe" KeyPath="yes">
           <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="GUI Studio" Description="GUI Studio interface design and prototyping" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="FigcraftIcon.exe" IconIndex="0" />
+          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="GUI Studio" Description="GUI Studio interface design and prototyping" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="FigcraftIcon.exe" IconIndex="0" />
         </File>
 
         <!-- .figcraft: GUI Studio's own format; GUI Studio is its default app. -->

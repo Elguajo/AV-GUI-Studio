@@ -7,7 +7,8 @@ checks and directory costing. An update uses the existing context's remembered e
 chosen folder reaches the elevated installer. Silent machine updates pass `ALLUSERS=1`.
 A cross-context copy is refused; changing context means uninstalling the old copy first.
 
-App registration follows the selected context. Existing optional shortcuts and file-handler
+App registration follows the selected context. Setup adds a GUI Studio shortcut to the Start menu
+and to the desktop of that context; uninstall removes both. Existing optional shortcuts and file-handler
 choices stay app-owned. No new cleanup operation or model/settings migration is introduced.
 Packaged resources remain package-owned; separately downloaded shared models are not caches
 and are outside this installer's ownership.
