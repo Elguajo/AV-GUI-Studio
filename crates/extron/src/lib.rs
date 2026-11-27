@@ -1,4 +1,4 @@
-//! Native Extron touch panel authoring, UI kits and EXUI/5 for GUI Studio.
+//! Native Extron touch panel authoring, UI kits and EXUI/5 for AV GUI Studio.
 
 mod adapter;
 mod author;
@@ -19,7 +19,7 @@ pub use author::{
 pub use control::{ControlEdit, ControlInfo, MAX_CONTROL_ID, control_ids, control_info, edit_control, kind_name};
 #[cfg(not(target_arch = "wasm32"))]
 pub use converter::{
-    CLI_ENV, EXPORTER_VERSION, Exporter, ExporterSource, REGISTRY_ENV, REGISTRY_ENV_OLD, build, check_exporter, exporter_from_environment,
+    CLI_ENV, CLI_ENV_OLD, EXPORTER_VERSION, Exporter, ExporterSource, REGISTRY_ENV, REGISTRY_ENV_OLD, build, check_exporter, exporter_variable,
     find_exporter, missing_donor,
 };
 pub use demo::document as demo;

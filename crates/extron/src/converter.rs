@@ -10,11 +10,13 @@ use serde_json::Value;
 
 use crate::{model::Project, package};
 
-pub const CLI_ENV: &str = "GUI_STUDIO_EXTRON_CLI";
-pub const REGISTRY_ENV: &str = "GUI_STUDIO_EXTRON_DONORS";
-/// The eframe prototype's name for the registry variable, still read after [`REGISTRY_ENV`].
-pub const REGISTRY_ENV_OLD: &str = "GUI_STUDIO_DONOR_REGISTRY";
-/// The exporter release GUI Studio is tested with, looked for in a sibling checkout.
+pub const CLI_ENV: &str = "AV_GUI_STUDIO_EXTRON_CLI";
+pub const REGISTRY_ENV: &str = "AV_GUI_STUDIO_EXTRON_DONORS";
+/// The names from before the rename to AV GUI Studio, still read after [`CLI_ENV`] and
+/// [`REGISTRY_ENV`]; the registry's last one is the eframe prototype's.
+pub const CLI_ENV_OLD: &str = "GUI_STUDIO_EXTRON_CLI";
+pub const REGISTRY_ENV_OLD: &[&str] = &["GUI_STUDIO_EXTRON_DONORS", "GUI_STUDIO_DONOR_REGISTRY"];
+/// The exporter release AV GUI Studio is tested with, looked for in a sibling checkout.
 pub const EXPORTER_VERSION: &str = "0.8.8";
 
 /// Where the exporter came from: the environment, the app's settings or a sibling checkout.
@@ -84,12 +86,11 @@ pub fn missing_donor(exporter: &Exporter, profile: &str) -> Option<String> {
 /// parents, with the [`EXPORTER_VERSION`] kit and the first registry whose donors are prepared. A
 /// variable that is set must be right: it is reported rather than passed over.
 pub fn find_exporter(settings: Option<(&Path, &Path)>, near: &[PathBuf]) -> Result<Exporter, String> {
-    if let Some(cli) = env_path(CLI_ENV) {
-        let registry = env_path(REGISTRY_ENV)
-            .or_else(|| env_path(REGISTRY_ENV_OLD))
-            .ok_or_else(|| format!("{CLI_ENV} is set: set {REGISTRY_ENV} to the donor registry too, or unset {CLI_ENV}."))?;
+    if let Some((cli_var, cli)) = first_env(&[CLI_ENV, CLI_ENV_OLD]) {
+        let (registry_var, registry) = first_env(&[&[REGISTRY_ENV], REGISTRY_ENV_OLD].concat())
+            .ok_or_else(|| format!("{cli_var} is set: set {REGISTRY_ENV} to the donor registry too, or unset {cli_var}."))?;
         return check_exporter(&cli, &registry, ExporterSource::Environment)
-            .map_err(|e| format!("{e} (from {CLI_ENV} and {REGISTRY_ENV}: correct them, or unset {CLI_ENV} to use the exporter chosen in the app)"));
+            .map_err(|e| format!("{e} (from {cli_var} and {registry_var}: correct them, or unset {cli_var} to use the exporter chosen in the app)"));
     }
     if let Some(found) = settings.and_then(|(cli, registry)| check_exporter(cli, registry, ExporterSource::Settings).ok()) {
         return Ok(found);
@@ -113,14 +114,16 @@ pub fn find_exporter(settings: Option<(&Path, &Path)>, near: &[PathBuf]) -> Resu
     ))
 }
 
-fn env_path(name: &str) -> Option<PathBuf> {
-    std::env::var_os(name).filter(|v| !v.is_empty()).map(PathBuf::from)
+/// The first of `names` set to a non-empty value, and that value as a path.
+fn first_env(names: &[&'static str]) -> Option<(&'static str, PathBuf)> {
+    names.iter().find_map(|name| std::env::var_os(name).filter(|v| !v.is_empty()).map(|v| (*name, PathBuf::from(v))))
 }
 
-/// Whether [`CLI_ENV`] is set: [`find_exporter`] then uses the environment only, whatever the
-/// app's settings hold, so choosing an exporter in the app can't fix an error it reports.
-pub fn exporter_from_environment() -> bool {
-    env_path(CLI_ENV).is_some()
+/// The variable naming the exporter CLI ([`CLI_ENV`], or [`CLI_ENV_OLD`]), when one is set:
+/// [`find_exporter`] then uses the environment only, whatever the app's settings hold, so choosing
+/// an exporter in the app can't fix an error it reports.
+pub fn exporter_variable() -> Option<&'static str> {
+    first_env(&[CLI_ENV, CLI_ENV_OLD]).map(|(name, _)| name)
 }
 
 /// Build `project` as a GDL at `output` with `exporter`, publishing the file only after the
@@ -205,11 +208,11 @@ mod tests {
     fn a_sibling_checkout_is_found_with_the_registry_whose_donors_are_prepared() {
         let root = tempfile::tempdir().unwrap();
         let (cli, prepared) = checkout(root.path());
-        let app = root.path().join("GUI-Studio/target/release");
+        let app = root.path().join("AV-GUI-Studio/target/release");
         std::fs::create_dir_all(&app).unwrap();
         // The environment of the test run may name an exporter; only the sibling search is checked
         // when it doesn't.
-        if std::env::var_os(super::CLI_ENV).is_none() {
+        if super::exporter_variable().is_none() {
             let found = find_exporter(None, &[app]).unwrap();
             assert_eq!((found.cli, found.registry, found.source), (cli.clone(), prepared.clone(), ExporterSource::Sibling));
         }
@@ -228,11 +231,11 @@ mod tests {
 
     #[test]
     fn nothing_found_says_how_to_choose_the_exporter() {
-        if std::env::var_os(super::CLI_ENV).is_some() {
+        if super::exporter_variable().is_some() {
             return;
         }
         let empty = tempfile::tempdir().unwrap();
         let none = find_exporter(None, &[empty.path().to_path_buf()]).unwrap_err();
-        assert!(none.contains("Choose GDL exporter") && none.contains("GUI_STUDIO_EXTRON_CLI"), "{none}");
+        assert!(none.contains("Choose GDL exporter") && none.contains("AV_GUI_STUDIO_EXTRON_CLI"), "{none}");
     }
 }

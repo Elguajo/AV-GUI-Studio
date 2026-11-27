@@ -1,4 +1,4 @@
-//! EXUI/5 writer adapted from GUI-Studio (3b7e5b7), src/exui.rs.
+//! EXUI/5 writer adapted from AV-GUI-Studio (3b7e5b7), src/exui.rs.
 
 use std::io::{Cursor, Write};
 

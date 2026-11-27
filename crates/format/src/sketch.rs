@@ -142,5 +142,5 @@ fn embedded_fonts(document: &Value) -> Option<String> {
         return None;
     }
     let list: Vec<&str> = families.iter().map(String::as_str).collect();
-    Some(format!("the file has embedded fonts GUI Studio doesn't use ({}); install them to see the text as designed", list.join(", ")))
+    Some(format!("the file has embedded fonts AV GUI Studio doesn't use ({}); install them to see the text as designed", list.join(", ")))
 }

@@ -103,7 +103,7 @@ fn native_board_shapes(msg: &Kv, json: &mut Value, warnings: &mut Vec<String>) {
         };
         let kind = node.get("shapeWithTextType").and_then(Kv::str).unwrap_or("SQUARE");
         let Some(shape) = board_shape(kind) else {
-            warnings.push(format!("shape with text kind {} has no GUI Studio outline; kept as a frame", crate::rest::props::clip_str(kind)));
+            warnings.push(format!("shape with text kind {} has no AV GUI Studio outline; kept as a frame", crate::rest::props::clip_str(kind)));
             continue;
         };
         // An outer text fallback means the generated body was absent or invalid. Keep the shared

@@ -1,11 +1,11 @@
 {
   "mcpServers": {
-    "gui-studio": {
-      "command": "${CLAUDE_PROJECT_DIR:-.}/target/release/gui-studio-cli",
+    "av-gui-studio": {
+      "command": "${CLAUDE_PROJECT_DIR:-.}/target/release/av-gui-studio-cli",
       "args": ["mcp"]
     },
-    "gui-studio-app": {
-      "command": "${CLAUDE_PROJECT_DIR:-.}/target/release/gui-studio-cli",
+    "av-gui-studio-app": {
+      "command": "${CLAUDE_PROJECT_DIR:-.}/target/release/av-gui-studio-cli",
       "args": ["mcp", "--attach", "7979"]
     }
   }

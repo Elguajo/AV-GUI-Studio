@@ -60,8 +60,8 @@ unset _bin
 # under its [[bin]] name (apps/*/Cargo.toml). Keep this map in step with those.
 cargo_out() {
   case "$1" in
-    figcraft) echo gui-studio ;;
-    figcraft-cli) echo gui-studio-cli ;;
+    figcraft) echo av-gui-studio ;;
+    figcraft-cli) echo av-gui-studio-cli ;;
     *) echo "error: no Cargo output name for $1" >&2; return 1 ;;
   esac
 }

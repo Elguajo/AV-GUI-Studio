@@ -1,5 +1,5 @@
 //! Native controls and validation for a touch panel project: one or more pages of one panel model.
-//! Adapted from GUI-Studio (3b7e5b7), src/project.rs.
+//! Adapted from AV-GUI-Studio (3b7e5b7), src/project.rs.
 
 use std::collections::{HashMap, HashSet};
 

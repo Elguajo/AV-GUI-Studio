@@ -4,11 +4,11 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish = false
-description = "GUI Studio desktop app"
-default-run = "gui-studio"
+description = "AV GUI Studio desktop app"
+default-run = "av-gui-studio"
 
 [[bin]]
-name = "gui-studio"
+name = "av-gui-studio"
 path = "src/main.rs"
 
 [lints]

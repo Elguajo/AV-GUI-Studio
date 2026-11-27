@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Installs everything a Windows build of GUI Studio needs into .tools/ inside this checkout.
+Installs everything a Windows build of AV GUI Studio needs into .tools/ inside this checkout.
 
 .DESCRIPTION
 Nothing is read from or written to other folders: no global Rust, no MinGW on PATH, no sibling

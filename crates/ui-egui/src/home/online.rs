@@ -310,7 +310,7 @@ fn team_row(app: &mut FigApp, ui: &mut Ui, t: &Tokens, server: &str, web: &str, 
         }
         if crate::right::menu_item(ui, tr("Copy link"), "") {
             app.clipboard_set_text(&team_link(server, &f.file));
-            app.toast(tr("Link copied: it opens the file in GUI Studio"));
+            app.toast(tr("Link copied: it opens the file in AV GUI Studio"));
             ui.close();
         }
         if !web.is_empty() && crate::right::menu_item(ui, tr("Copy browser link"), "") {

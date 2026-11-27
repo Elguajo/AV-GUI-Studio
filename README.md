@@ -1,8 +1,8 @@
-# GUI Studio
+# AV GUI Studio
 
-![GUI Studio app icon](assets/app-icon/hicolor/128x128/apps/ai.storyteller.figcraft.png)
+![AV GUI Studio app icon](assets/app-icon/hicolor/128x128/apps/ai.storyteller.figcraft.png)
 
-GUI Studio is a Rust desktop editor for Extron touch panel layouts. The local Windows build supports authoring and exporting one TLP Pro 1025M screen.
+AV GUI Studio is a Rust desktop editor for Extron touch panel layouts. The local Windows build supports authoring and exporting one TLP Pro 1025M screen.
 
 ## Build and run
 
@@ -17,10 +17,10 @@ Then in each new shell load the environment and build:
 ```powershell
 . .\scripts\env.ps1
 cargo build --locked --release -p figcraft -p figcraft-cli
-.\target\release\gui-studio.exe
+.\target\release\av-gui-studio.exe
 ```
 
-In Git Bash, `source scripts/env.sh` loads the same environment. Keep the checkout at a short path without spaces, such as `D:\DEV\GUI-Studio`: the MinGW linker splits its own library paths at a space, and deep dependency files under `.tools` can pass Windows' 260-character path limit.
+In Git Bash, `source scripts/env.sh` loads the same environment. Keep the checkout at a short path without spaces, such as `D:\DEV\AV-GUI-Studio`: the MinGW linker splits its own library paths at a space, and deep dependency files under `.tools` can pass Windows' 260-character path limit.
 
 Choose **File → Extron → New 1025M demo** to open the editable Aurora Meeting Room example. Its **Home** frame contains labels, shapes, a slider and instances of the source and Mute button sets. Edit button state fills and captions on the variants beside the screen. Use **Validate screen**, **Export EXUI** or **Build GDL** in the same menu.
 
@@ -36,22 +36,22 @@ Buttons and sliders are instances of **master components**: the first one insert
 
 The **Problems** section under the layers lists every export problem of an Extron screen and updates as you edit. Select a problem to select its layer, reveal it in the layers and bring it into view. Export stays blocked until the list is empty.
 
-EXUI export works on its own. Building GDL needs the separately distributed Extron exporter 0.8.8 (run with `dotnet`) and a donor registry whose donor GDLs are prepared. GUI Studio looks for them in this order:
+EXUI export works on its own. Building GDL needs the separately distributed Extron exporter 0.8.8 (run with `dotnet`) and a donor registry whose donor GDLs are prepared. AV GUI Studio looks for them in this order:
 
-1. the environment variables `GUI_STUDIO_EXTRON_CLI` and `GUI_STUDIO_EXTRON_DONORS` (`GUI_STUDIO_DONOR_REGISTRY` also works), set before starting the editor or CLI;
+1. the environment variables `AV_GUI_STUDIO_EXTRON_CLI` and `AV_GUI_STUDIO_EXTRON_DONORS` (the names from before the rename, `GUI_STUDIO_EXTRON_CLI` and `GUI_STUDIO_EXTRON_DONORS`, also work), set before starting the editor or CLI;
 2. the exporter chosen in the app: **File → Extron → Choose GDL exporter…** asks for `Extron.Cli.dll` and then `donors.json` and keeps them in the preferences;
 3. a `figma-extron-exporter` checkout beside the program or the working folder (or one of their parents), with `output\releases\0.8.8\smoke-kit\cli\Extron.Cli.dll` and the first of the smoke kit's and the checkout's `samples\donors.json` whose donors are prepared.
 
 ```powershell
-$env:GUI_STUDIO_EXTRON_CLI = 'D:\DEV\figma-extron-exporter\output\releases\0.8.8\smoke-kit\cli\Extron.Cli.dll'
-$env:GUI_STUDIO_EXTRON_DONORS = 'D:\DEV\figma-extron-exporter\samples\donors.json'
+$env:AV_GUI_STUDIO_EXTRON_CLI = 'D:\DEV\figma-extron-exporter\output\releases\0.8.8\smoke-kit\cli\Extron.Cli.dll'
+$env:AV_GUI_STUDIO_EXTRON_DONORS = 'D:\DEV\figma-extron-exporter\samples\donors.json'
 ```
 
 When none is found, **Build GDL…** asks for the exporter first. A registry without a prepared donor for the project's panel is reported with the exporter's `prepare-donor` step. In the app the build runs in the background: a banner says the GDL is being built, the window keeps working, the Extron export actions wait for it, and the result appears as a message. Use a new output filename for GDL. The app publishes the output after the converter reports all independent verification checks passed.
 
 ## Headless export
 
-Run `gui-studio-cli commands --filter extron` for the registered command IDs and parameters. Save the following command array as `aurora.json`, then run `gui-studio-cli run aurora.json`:
+Run `av-gui-studio-cli commands --filter extron` for the registered command IDs and parameters. Save the following command array as `aurora.json`, then run `av-gui-studio-cli run aurora.json`:
 
 ```json
 [
@@ -81,11 +81,11 @@ To author a screen without the editor, start from `extron.newPanel` and add cont
 
 ## AI agents (MCP)
 
-`gui-studio-cli mcp` is an MCP server for Claude Code, Codex and other MCP clients. This repository carries [`.mcp.json`](.mcp.json) for Claude Code and [`.codex/config.toml`](.codex/config.toml) for Codex, each with a headless server and one attached to the app started with `gui-studio --control 7979`. Build the CLI first; setup and the tools are in [docs/mcp.md](docs/mcp.md#configure-a-client).
+`av-gui-studio-cli mcp` is an MCP server for Claude Code, Codex and other MCP clients. This repository carries [`.mcp.json`](.mcp.json) for Claude Code and [`.codex/config.toml`](.codex/config.toml) for Codex, each with a headless server and one attached to the app started with `av-gui-studio --control 7979`. Build the CLI first; setup and the tools are in [docs/mcp.md](docs/mcp.md#configure-a-client).
 
 ## License
 
-GUI Studio is an independent product built on a snapshot of [FigCraft](https://github.com/storytold/figcraft) `b828e6c7`, which is licensed MIT OR Apache-2.0. Selected FigCraft changes are ported by hand ([ADR-003](.progressive/decisions/ADR-003-independent-repository.md)). See [NOTICE](NOTICE), [LICENSE-MIT](LICENSE-MIT), [LICENSE-APACHE](LICENSE-APACHE) and [asset provenance](ATTRIBUTION.md).
+AV GUI Studio is an independent product built on a snapshot of [FigCraft](https://github.com/storytold/figcraft) `b828e6c7`, which is licensed MIT OR Apache-2.0. Selected FigCraft changes are ported by hand ([ADR-003](.progressive/decisions/ADR-003-independent-repository.md)). See [NOTICE](NOTICE), [LICENSE-MIT](LICENSE-MIT), [LICENSE-APACHE](LICENSE-APACHE) and [asset provenance](ATTRIBUTION.md).
 
 ## Project specs
 

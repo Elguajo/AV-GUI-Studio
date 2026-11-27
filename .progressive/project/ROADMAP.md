@@ -1,4 +1,4 @@
-# Roadmap — GUI Studio
+# Roadmap — AV GUI Studio
 
 - [>] Phase 01 — TLP Pro 1025M editor, Figma interaction core and GDL export — `.progressive/phases/01-1025m-editor.md`
 - [ ] Phase 02 — Pages, popups, frames and layout — `.progressive/phases/02-panel-projects.md`

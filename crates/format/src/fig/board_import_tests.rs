@@ -645,7 +645,7 @@ fn every_figjam_shape_kind_maps_or_stays_a_frame() {
             assert_eq!(frame.board, Some(figcraft_doc::BoardItem::Shape { shape }), "{kind}");
         } else {
             assert!(frame.board.is_none(), "{kind}");
-            assert!(warnings.iter().any(|w| w.contains(kind) && w.contains("no GUI Studio outline")), "{kind}: {warnings:?}");
+            assert!(warnings.iter().any(|w| w.contains(kind) && w.contains("no AV GUI Studio outline")), "{kind}: {warnings:?}");
         }
     }
     assert_eq!(mapped, 23);

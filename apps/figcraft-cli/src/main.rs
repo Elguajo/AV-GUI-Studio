@@ -1,4 +1,4 @@
-//! `gui-studio-cli`: GUI Studio without a window. Inspect, export, convert and render documents, run
+//! `av-gui-studio-cli`: AV GUI Studio without a window. Inspect, export, convert and render documents, run
 //! command scripts, list commands, serve MCP on stdio, publish plugins to a server's plugin
 //! directory, publish code connect mappings to a design file and measure performance.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
@@ -152,7 +152,7 @@ fn publish_plugin(folder: &str, server: &str) -> CliResult<ExitCode> {
 fn mcp(attach: Option<&str>, timeout: Option<u64>, roots: Option<figcraft_engine::file_access::Roots>) -> CliResult<ExitCode> {
     let backend: Box<dyn figcraft_mcp::Backend> = match attach {
         Some(addr) => {
-            let no_app = |e: std::io::Error| format!("can't reach the GUI Studio app at {addr}: {e} (start it with `figcraft --control PORT`)");
+            let no_app = |e: std::io::Error| format!("can't reach the AV GUI Studio app at {addr}: {e} (start it with `figcraft --control PORT`)");
             let b = figcraft_mcp::Attached::connect(addr).map_err(no_app)?;
             match timeout {
                 Some(secs) => Box::new(b.with_timeout(std::time::Duration::from_secs(secs)).map_err(no_app)?),

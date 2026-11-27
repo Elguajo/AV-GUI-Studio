@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish = false
-description = "GUI Studio native panel model and EXUI/5 export"
+description = "AV GUI Studio native panel model and EXUI/5 export"
 
 [lints]
 workspace = true

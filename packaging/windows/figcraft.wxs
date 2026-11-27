@@ -3,12 +3,12 @@
   <?ifndef HasCraftFontLicences ?>
   <?define HasCraftFontLicences=0 ?>
   <?endif?>
-  <Package Name="GUI Studio" Manufacturer="GUI Studio contributors" Version="$(var.Version)" UpgradeCode="6A20AFB0-1719-4997-B174-FF986FAAFD9F" Scope="perUserOrMachine" Compressed="yes" Language="1033">
-    <SummaryInformation Description="GUI Studio interface design and prototyping tool" Manufacturer="GUI Studio contributors" />
+  <Package Name="AV GUI Studio" Manufacturer="AV GUI Studio contributors" Version="$(var.Version)" UpgradeCode="6A20AFB0-1719-4997-B174-FF986FAAFD9F" Scope="perUserOrMachine" Compressed="yes" Language="1033">
+    <SummaryInformation Description="AV GUI Studio interface design and prototyping tool" Manufacturer="AV GUI Studio contributors" />
     <?include $(sys.SOURCEFILEDIR)install-policy.wxi?>
     <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
          (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
-    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of GUI Studio is already installed." />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of AV GUI Studio is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <!-- MSI caches this icon using its Id as the filename. Advertised shortcuts to an
@@ -16,21 +16,21 @@
     <Icon Id="FigcraftIcon.exe" SourceFile="$(var.IconPath)" />
     <Property Id="ARPPRODUCTICON" Value="FigcraftIcon.exe" />
     <!-- Installed apps links: the repository from [workspace.package] in Cargo.toml. -->
-    <Property Id="ARPURLINFOABOUT" Value="https://github.com/Elguajo/GUI-Studio" />
-    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/Elguajo/GUI-Studio/releases" />
-    <Property Id="ARPHELPLINK" Value="https://github.com/Elguajo/GUI-Studio/issues" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/Elguajo/AV-GUI-Studio" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/Elguajo/AV-GUI-Studio/releases" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/Elguajo/AV-GUI-Studio/issues" />
 
-    <!-- One folder, Programs\GUI Studio or Program Files\GUI Studio: the same place the wizard's
+    <!-- One folder, Programs\AV GUI Studio or Program Files\AV GUI Studio: the same place the wizard's
          CraftDefault*Folder actions (install-policy.wxi) choose, so silent installs agree with it. -->
     <StandardDirectory Id="ProgramFiles6432Folder">
-      <Directory Id="INSTALLFOLDER" Name="GUI Studio" />
+      <Directory Id="INSTALLFOLDER" Name="AV GUI Studio" />
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
     <StandardDirectory Id="DesktopFolder" />
 
     <!-- An upgrade installs where the user put the previous version (written by FigcraftApp). -->
 
-    <Feature Id="Main" Title="GUI Studio" Level="1">
+    <Feature Id="Main" Title="AV GUI Studio" Level="1">
       <?if $(var.HasCraftFontLicences) = 1 ?>
       <ComponentGroupRef Id="CraftFontLicences" />
       <?endif?>
@@ -54,8 +54,8 @@
     <Property Id="FigcraftVersion" Value="$(var.DisplayVersion)" />
 
     <!-- Finish page: say where to find the app, and offer to start it (ticked by default). -->
-    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="GUI Studio $(var.DisplayVersion) is installed. You can start it any time from the Start menu." />
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch GUI Studio" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="AV GUI Studio $(var.DisplayVersion) is installed. You can start it any time from the Start menu." />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch AV GUI Studio" />
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
     <Property Id="WixShellExecTarget" Value="[#FigcraftExe]" />
     <!-- Runs in the wizard's own (unelevated) process, so the app starts as the user, not as admin. -->
@@ -71,13 +71,13 @@
     <ComponentGroup Id="FigcraftFiles" Directory="INSTALLFOLDER">
       <Component Id="FigcraftApp" Guid="238228C3-4C1D-4B33-8C5D-C31B65BC2DA4">
         <File Id="FigcraftNotice" Source="$(var.BinDir)\NOTICE" KeyPath="no" />
-        <File Id="FigcraftExe" Source="$(var.BinDir)\gui-studio.exe" KeyPath="yes">
-          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="GUI Studio" Description="GUI Studio interface design and prototyping" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="FigcraftIcon.exe" IconIndex="0" />
-          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="GUI Studio" Description="GUI Studio interface design and prototyping" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="FigcraftIcon.exe" IconIndex="0" />
+        <File Id="FigcraftExe" Source="$(var.BinDir)\av-gui-studio.exe" KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="AV GUI Studio" Description="AV GUI Studio interface design and prototyping" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="FigcraftIcon.exe" IconIndex="0" />
+          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="AV GUI Studio" Description="AV GUI Studio interface design and prototyping" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="FigcraftIcon.exe" IconIndex="0" />
         </File>
 
-        <!-- .figcraft: GUI Studio's own format; GUI Studio is its default app. -->
-        <ProgId Id="GuiStudio.Document" Description="GUI Studio Document" Icon="FigcraftExe" IconIndex="0">
+        <!-- .figcraft: AV GUI Studio's own format; AV GUI Studio is its default app. -->
+        <ProgId Id="GuiStudio.Document" Description="AV GUI Studio Document" Icon="FigcraftExe" IconIndex="0">
           <Extension Id="figcraft" ContentType="application/x-figcraft">
             <Verb Id="open" Command="Open" TargetFile="FigcraftExe" Argument="&quot;%1&quot;" />
           </Extension>
@@ -89,27 +89,27 @@
         <RegistryValue Root="HKMU" Key="Software\Classes\.png\OpenWithProgids" Name="Figcraft.Image" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\.jpg\OpenWithProgids" Name="Figcraft.Image" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\.jpeg\OpenWithProgids" Name="Figcraft.Image" Value="" Type="string" />
-        <!-- Sketch files (opened as a copy; GUI Studio doesn't save .sketch): "Open with" only too. -->
+        <!-- Sketch files (opened as a copy; AV GUI Studio doesn't save .sketch): "Open with" only too. -->
         <ProgId Id="Figcraft.Sketch" Description="Sketch Document" Icon="FigcraftExe" IconIndex="0" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Figcraft.Sketch\shell\open\command" Value="&quot;[#FigcraftExe]&quot; &quot;%1&quot;" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\.sketch\OpenWithProgids" Name="Figcraft.Sketch" Value="" Type="string" />
 
         <!-- "Open with" app list and the Run dialog (Win+R "figcraft"). -->
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\gui-studio.exe" Name="FriendlyAppName" Value="GUI Studio" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\gui-studio.exe\shell\open\command" Value="&quot;[#FigcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\gui-studio.exe\SupportedTypes" Name=".figcraft" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\gui-studio.exe\SupportedTypes" Name=".svg" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\gui-studio.exe\SupportedTypes" Name=".png" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\gui-studio.exe\SupportedTypes" Name=".jpg" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\gui-studio.exe\SupportedTypes" Name=".jpeg" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\gui-studio.exe\SupportedTypes" Name=".sketch" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\gui-studio.exe" Value="[#FigcraftExe]" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\GUI Studio" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\av-gui-studio.exe" Name="FriendlyAppName" Value="AV GUI Studio" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\av-gui-studio.exe\shell\open\command" Value="&quot;[#FigcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\av-gui-studio.exe\SupportedTypes" Name=".figcraft" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\av-gui-studio.exe\SupportedTypes" Name=".svg" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\av-gui-studio.exe\SupportedTypes" Name=".png" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\av-gui-studio.exe\SupportedTypes" Name=".jpg" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\av-gui-studio.exe\SupportedTypes" Name=".jpeg" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\av-gui-studio.exe\SupportedTypes" Name=".sketch" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\av-gui-studio.exe" Value="[#FigcraftExe]" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\AV GUI Studio" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
       </Component>
 
 <?if $(var.HasCli) = 1 ?>
       <Component Id="FigcraftCli">
-        <File Id="FigcraftCliExe" Source="$(var.BinDir)\gui-studio-cli.exe" KeyPath="yes" />
+        <File Id="FigcraftCliExe" Source="$(var.BinDir)\av-gui-studio-cli.exe" KeyPath="yes" />
       </Component>
 <?endif?>
     </ComponentGroup>

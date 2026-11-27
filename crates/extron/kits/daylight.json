@@ -3,7 +3,7 @@
   "id": "daylight",
   "name": "Daylight",
   "description": "A light panel with white cards and blue feedback, for bright rooms.",
-  "author": "GUI Studio",
+  "author": "AV GUI Studio",
   "background": "#F2F4F7",
   "button": {
     "normal": {

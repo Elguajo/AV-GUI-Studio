@@ -1,14 +1,14 @@
-//! `gui-studio-cli export … -o out.xml` (Android Vector Drawable) end to end.
+//! `av-gui-studio-cli export … -o out.xml` (Android Vector Drawable) end to end.
 
 use std::process::Command;
 
 fn bin() -> Command {
-    Command::new(env!("CARGO_BIN_EXE_gui-studio-cli"))
+    Command::new(env!("CARGO_BIN_EXE_av-gui-studio-cli"))
 }
 
 #[test]
 fn xml_export_writes_a_drawable_and_prints_its_notes() {
-    let d = std::env::temp_dir().join(format!("gui-studio-cli-vd-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("av-gui-studio-cli-vd-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     let script = d.join("s.jsonl");
     std::fs::write(

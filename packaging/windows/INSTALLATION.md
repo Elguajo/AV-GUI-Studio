@@ -1,13 +1,13 @@
 # Windows installation policy checks
 
-New installations default to the current account under `Programs\GUI Studio`.
+New installations default to the current account under `Programs\AV GUI Studio`.
 The first setup page offers installation for everyone. Scope is selected before duplicate
 checks and directory costing. An update uses the existing context's remembered exact folder;
 `INSTALLFOLDER` supplied explicitly is never replaced. It is a secure MSI property so the
 chosen folder reaches the elevated installer. Silent machine updates pass `ALLUSERS=1`.
 A cross-context copy is refused; changing context means uninstalling the old copy first.
 
-App registration follows the selected context. Setup adds a GUI Studio shortcut to the Start menu
+App registration follows the selected context. Setup adds a AV GUI Studio shortcut to the Start menu
 and to the desktop of that context; uninstall removes both. Existing optional shortcuts and file-handler
 choices stay app-owned. No new cleanup operation or model/settings migration is introduced.
 Packaged resources remain package-owned; separately downloaded shared models are not caches

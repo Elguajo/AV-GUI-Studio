@@ -26,7 +26,7 @@ fn tmp(name: &str) -> std::io::Result<TempDir> {
     static NEXT: AtomicUsize = AtomicUsize::new(0);
     loop {
         let n = NEXT.fetch_add(1, Ordering::Relaxed);
-        let dir = std::env::temp_dir().join(format!("gui-studio-cli-test-{}-{n}-{name}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("av-gui-studio-cli-test-{}-{n}-{name}", std::process::id()));
         match fs::create_dir(&dir) {
             Ok(()) => return Ok(TempDir(dir)),
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
@@ -40,10 +40,10 @@ fn completions_name_the_cli_its_subcommands_and_options() -> std::io::Result<()>
     let temp = tmp("completions")?;
     let dir = temp.path();
     generator::generate(dir)?;
-    for name in ["gui-studio-cli.bash", "gui-studio-cli.elv", "gui-studio-cli.fish", "_gui-studio-cli.ps1", "_gui-studio-cli"] {
+    for name in ["av-gui-studio-cli.bash", "av-gui-studio-cli.elv", "av-gui-studio-cli.fish", "_av-gui-studio-cli.ps1", "_av-gui-studio-cli"] {
         let text = fs::read_to_string(dir.join(name))?;
         for word in [
-            "gui-studio-cli",
+            "av-gui-studio-cli",
             "info",
             "export",
             "convert",
@@ -71,7 +71,7 @@ fn bash_dispatch_states_have_matching_option_blocks() -> std::io::Result<()> {
     let temp = tmp("bash-completion-states")?;
     let dir = temp.path();
     generator::generate(dir)?;
-    let text = fs::read_to_string(dir.join("gui-studio-cli.bash"))?;
+    let text = fs::read_to_string(dir.join("av-gui-studio-cli.bash"))?;
     let states: Vec<_> =
         text.lines().filter_map(|line| line.trim().strip_prefix("cmd=\"")?.strip_suffix('"')).filter(|state| !state.is_empty()).collect();
     assert!(states.len() > 1, "the completion has no subcommand dispatch states");
@@ -98,19 +98,19 @@ fn man_pages_cover_every_subcommand_without_synthetic_help_pages() -> std::io::R
     assert_eq!(
         pages,
         [
-            "gui-studio-cli-commands.1",
-            "gui-studio-cli-connect-publish.1",
-            "gui-studio-cli-connect.1",
-            "gui-studio-cli-convert.1",
-            "gui-studio-cli-export.1",
-            "gui-studio-cli-info.1",
-            "gui-studio-cli-mcp.1",
-            "gui-studio-cli-perf.1",
-            "gui-studio-cli-plugin-publish.1",
-            "gui-studio-cli-plugin.1",
-            "gui-studio-cli-render.1",
-            "gui-studio-cli-run.1",
-            "gui-studio-cli.1",
+            "av-gui-studio-cli-commands.1",
+            "av-gui-studio-cli-connect-publish.1",
+            "av-gui-studio-cli-connect.1",
+            "av-gui-studio-cli-convert.1",
+            "av-gui-studio-cli-export.1",
+            "av-gui-studio-cli-info.1",
+            "av-gui-studio-cli-mcp.1",
+            "av-gui-studio-cli-perf.1",
+            "av-gui-studio-cli-plugin-publish.1",
+            "av-gui-studio-cli-plugin.1",
+            "av-gui-studio-cli-render.1",
+            "av-gui-studio-cli-run.1",
+            "av-gui-studio-cli.1",
         ]
     );
     for name in &pages {
@@ -120,11 +120,11 @@ fn man_pages_cover_every_subcommand_without_synthetic_help_pages() -> std::io::R
         assert!(!text.contains("man-and-completions"), "{name} names the example instead of the CLI");
     }
     for (page, option) in [
-        ("gui-studio-cli.1", "--no-system-fonts"),
-        ("gui-studio-cli-export.1", "--format"),
-        ("gui-studio-cli-export.1", "--automation-read-root"),
-        ("gui-studio-cli-plugin-publish.1", "--server"),
-        ("gui-studio-cli-connect-publish.1", "--dry-run"),
+        ("av-gui-studio-cli.1", "--no-system-fonts"),
+        ("av-gui-studio-cli-export.1", "--format"),
+        ("av-gui-studio-cli-export.1", "--automation-read-root"),
+        ("av-gui-studio-cli-plugin-publish.1", "--server"),
+        ("av-gui-studio-cli-connect-publish.1", "--dry-run"),
     ] {
         let text = fs::read_to_string(dir.join(page))?.replace("\\-", "-");
         assert!(text.contains(option), "{page} does not contain {option}");
@@ -139,7 +139,7 @@ fn generation_creates_the_output_directory_and_can_run_again() -> std::io::Resul
     let output = dir.join("new").join("docs");
     assert!(!output.exists());
     generator::generate(&output)?;
-    let page = output.join("gui-studio-cli.1");
+    let page = output.join("av-gui-studio-cli.1");
     let first = fs::read(&page)?;
     assert!(!first.is_empty());
     fs::write(&page, "old page")?;
@@ -158,7 +158,7 @@ fn generation_returns_filesystem_errors() -> std::io::Result<()> {
     assert!(generator::generate(&file).is_err());
     assert_eq!(fs::read_to_string(&file)?, "keep me");
     // A valid directory can still fail when writing one of the generated pages.
-    fs::create_dir(dir.join("gui-studio-cli.1"))?;
+    fs::create_dir(dir.join("av-gui-studio-cli.1"))?;
     assert!(generator::generate(dir).is_err());
     Ok(())
 }

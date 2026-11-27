@@ -57,7 +57,7 @@ impl<'d> Exporter<'d> {
             // The format's variable width is the same on both sides of the path: a stroke wider on
             // one side is written as the area it paints, with the stroke itself kept as plugin data
             // (which the import puts back).
-            self.warn("strokes wider on one side of their path were written as filled outlines (the stroke itself is kept for GUI Studio)");
+            self.warn("strokes wider on one side of their path were written as filled outlines (the stroke itself is kept for AV GUI Studio)");
             let children = self.layer(&outline, parent, f, nested);
             f.push(("pluginData", arr(vec![o(vec![("pluginID", s(STASH.0)), ("value", s(&original)), ("key", s(STASH.1))])])));
             return children;

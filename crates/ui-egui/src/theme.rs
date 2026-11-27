@@ -436,7 +436,7 @@ pub fn paint_wordmark(painter: &egui::Painter, left_center: egui::Pos2, size: f3
     painter.text(egui::pos2(left_center.x + fig_width, left_center.y), egui::Align2::LEFT_CENTER, "Studio", font, t.accent_text);
 }
 
-/// Paint the GUI Studio app icon.
+/// Paint the AV GUI Studio app icon.
 pub fn paint_app_icon(ui: &egui::Ui, rect: egui::Rect) {
     static ICON: OnceLock<Option<egui::ColorImage>> = OnceLock::new();
     let image = ICON.get_or_init(|| {
@@ -450,7 +450,7 @@ pub fn paint_app_icon(ui: &egui::Ui, rect: egui::Rect) {
     };
     let id = egui::Id::unique("gui_studio_app_icon");
     let texture = ui.ctx().data(|data| data.get_temp::<egui::TextureHandle>(id)).unwrap_or_else(|| {
-        let texture = ui.ctx().load_texture("gui-studio-app-icon", image.clone(), egui::TextureOptions::LINEAR);
+        let texture = ui.ctx().load_texture("av-gui-studio-app-icon", image.clone(), egui::TextureOptions::LINEAR);
         ui.ctx().data_mut(|data| data.insert_temp(id, texture.clone()));
         texture
     });

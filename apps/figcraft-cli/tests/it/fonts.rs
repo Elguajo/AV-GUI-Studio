@@ -6,11 +6,11 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::{Value, json};
 
-/// The result of one `gui-studio-cli run` step (script file `name`); `opt_out` sets the environment
+/// The result of one `av-gui-studio-cli run` step (script file `name`); `opt_out` sets the environment
 /// variable.
 fn run_one(name: &str, step: Value, args: &[&str], opt_out: bool) -> Value {
     static NEXT_SCRIPT: AtomicU64 = AtomicU64::new(0);
-    let d = std::env::temp_dir().join(format!("gui-studio-cli-fonts-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("av-gui-studio-cli-fonts-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     // Tests in this binary run concurrently. `sketch_imports_keep_to_no_system_fonts` also calls
     // `families`, so a shared `families.json` could be truncated while another child reads it;
@@ -18,7 +18,7 @@ fn run_one(name: &str, step: Value, args: &[&str], opt_out: bool) -> Value {
     let sequence = NEXT_SCRIPT.fetch_add(1, Ordering::Relaxed);
     let script = d.join(format!("{name}-{sequence}.json"));
     std::fs::write(&script, json!([step]).to_string()).unwrap();
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_gui-studio-cli"));
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_av-gui-studio-cli"));
     cmd.arg("run").arg(&script).args(args);
     if opt_out {
         cmd.env("FIGCRAFT_NO_SYSTEM_FONTS", "1");
@@ -66,24 +66,24 @@ fn headless_runs_resolve_installed_families_unless_opted_out() {
 
 #[test]
 fn info_lists_the_fonts_a_file_uses_that_are_missing() {
-    let d = std::env::temp_dir().join(format!("gui-studio-cli-missing-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("av-gui-studio-cli-missing-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     let (script, file) = (d.join("make.json"), d.join("doc.figcraft"));
     let text =
         |family: &str| json!({"command": "text.create", "params": {"text": "Hamburgefonstiv", "x": 0, "y": 0, "props": {"fontFamily": family}}});
-    std::fs::write(&script, json!([text("GUI Studio Missing CLI"), text("GUI Studio Missing CLI")]).to_string()).unwrap();
-    let cli = || Command::new(env!("CARGO_BIN_EXE_gui-studio-cli"));
+    std::fs::write(&script, json!([text("AV GUI Studio Missing CLI"), text("AV GUI Studio Missing CLI")]).to_string()).unwrap();
+    let cli = || Command::new(env!("CARGO_BIN_EXE_av-gui-studio-cli"));
     let made = cli().arg("run").arg(&script).arg("--out").arg(&file).output().unwrap();
     assert!(made.status.success(), "{}", String::from_utf8_lossy(&made.stderr));
 
     let out = cli().arg("info").arg(&file).arg("--json").output().unwrap();
     assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
     let v: Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert_eq!(v["missingFonts"], json!([{"family": "GUI Studio Missing CLI", "layers": 2}]));
+    assert_eq!(v["missingFonts"], json!([{"family": "AV GUI Studio Missing CLI", "layers": 2}]));
 
     let out = cli().arg("info").arg(&file).output().unwrap();
     let shown = String::from_utf8_lossy(&out.stdout);
-    assert!(shown.contains("missing font \"GUI Studio Missing CLI\": 2 text layers"), "{shown}");
+    assert!(shown.contains("missing font \"AV GUI Studio Missing CLI\": 2 text layers"), "{shown}");
 }
 
 /// A synthetic `.sketch` file: one page with one Helvetica text.
@@ -93,12 +93,12 @@ const SKETCH: &str = "UEsDBBQAAAAIAOFFVl2B8d55RwAAAFcAAAANAAAAZG9jdW1lbnQuanNvbq
 /// `--no-system-fonts` too: the run still knows only the built-in families.
 #[test]
 fn sketch_imports_keep_to_no_system_fonts() {
-    let d = std::env::temp_dir().join(format!("gui-studio-cli-fonts-sketch-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("av-gui-studio-cli-fonts-sketch-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     let script = d.join("open.json");
     let steps = json!([{"command": "file.open", "params": {"data": SKETCH, "name": "x.sketch"}}, {"command": "text.fonts"}]);
     std::fs::write(&script, steps.to_string()).unwrap();
-    let out = Command::new(env!("CARGO_BIN_EXE_gui-studio-cli"))
+    let out = Command::new(env!("CARGO_BIN_EXE_av-gui-studio-cli"))
         .arg("run")
         .arg(&script)
         .arg("--no-system-fonts")

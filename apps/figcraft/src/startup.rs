@@ -14,14 +14,14 @@ pub fn failed(error: &eframe::Error, quiet: bool, tried: Option<&str>) {
     if log::log_enabled!(log::Level::Error) {
         log::error!("{text}");
     } else {
-        eprintln!("GUI Studio: {text}");
+        eprintln!("AV GUI Studio: {text}");
     }
     if quiet {
         return;
     }
     let _ = rfd::MessageDialog::new()
         .set_level(rfd::MessageLevel::Error)
-        .set_title("GUI Studio")
+        .set_title("AV GUI Studio")
         .set_description(text)
         .set_buttons(rfd::MessageButtons::Ok)
         .show();

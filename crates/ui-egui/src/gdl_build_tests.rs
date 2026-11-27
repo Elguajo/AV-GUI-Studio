@@ -19,7 +19,7 @@ fn broken_exporter(dir: &std::path::Path) -> (String, String) {
 #[test]
 fn a_gdl_builds_on_a_worker_thread_and_its_result_arrives_as_a_toast() {
     // A set environment variable would pick another exporter.
-    if std::env::var_os(figcraft_engine::gui_studio_extron::CLI_ENV).is_some() {
+    if figcraft_engine::gui_studio_extron::exporter_variable().is_some() {
         return;
     }
     let dir = std::env::temp_dir().join(format!("gui-studio-gdl-thread-{}", std::process::id()));

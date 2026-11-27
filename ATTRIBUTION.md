@@ -11,7 +11,7 @@ MIT OR Apache-2.0. No third-party icon sets are used.
 
 | Path | Author | Source | Licence | Notes |
 |---|---|---|---|---|
-| `assets/app-icon/` (SVG, PNG and ICO) | GUI Studio contributors | Original screen-and-controls mark, see [app icon](assets/app-icon/README.md) | MIT OR Apache-2.0 | GUI Studio app icon |
+| `assets/app-icon/` (SVG, PNG and ICO) | AV GUI Studio contributors | Original screen-and-controls mark, see [app icon](assets/app-icon/README.md) | MIT OR Apache-2.0 | AV GUI Studio app icon |
 | `docs/images/` (all screenshots and exports: `shot-*.png`, `art-*.png`) | FigCraft contributors | Screenshots of FigCraft showing synthetic demo documents made in FigCraft, and PNG exports of those documents by FigCraft's renderer | MIT OR Apache-2.0 | No third-party artwork |
 | `examples/*.figcraft` | FigCraft contributors | Synthetic demo documents built through FigCraft's command API; invented copy, shapes and vectors drawn from scratch, no images or embedded fonts | MIT OR Apache-2.0 | Text uses Inter (OFL, from craft-fonts or the system); no third-party artwork |
 
@@ -46,4 +46,4 @@ egui's default fonts (compiled into the `egui`/`epaint` crates) keep their own l
 |---|---|---|---|---|
 | `crates/ui-egui/locales/ar.toml` | @hussain-hz with OpenAI Codex (AI-assisted) | Original Arabic wording from FigCraft's English catalog and engine command labels; no proprietary localisation consulted | MIT OR Apache-2.0 | Draft; native-speaker review and maintainer approval pending |
 
-The Extron control model, demo and EXUI writer in crates/extron were adapted by the GUI Studio contributors from their [GUI-Studio prototype](https://github.com/Elguajo/GUI-Studio/tree/3b7e5b7/src), commit 3b7e5b7, and are distributed here under MIT OR Apache-2.0.
+The Extron control model, demo and EXUI writer in crates/extron were adapted by the AV GUI Studio contributors from their [AV-GUI-Studio prototype](https://github.com/Elguajo/AV-GUI-Studio/tree/3b7e5b7/src), commit 3b7e5b7, and are distributed here under MIT OR Apache-2.0.

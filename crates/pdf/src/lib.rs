@@ -173,7 +173,7 @@ fn write(doc: &Document, pages: &[(Vec<NodeId>, Rect)], opts: &PdfOptions) -> Re
 
 fn write_inner(doc: &Document, pages: &[(Vec<NodeId>, Rect)], opts: &PdfOptions) -> Result<Vec<u8>, PdfError> {
     let mut pdf = krilla::Document::new();
-    let mut meta = krilla::metadata::Metadata::new().creator("GUI Studio".into()).producer("GUI Studio".into());
+    let mut meta = krilla::metadata::Metadata::new().creator("AV GUI Studio".into()).producer("AV GUI Studio".into());
     if let Some(t) = opts.title.as_ref().filter(|t| !t.trim().is_empty()) {
         meta = meta.title(t.clone());
     }

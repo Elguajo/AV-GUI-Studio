@@ -1,6 +1,6 @@
 {
   "id": "figcraft",
-  "name": "GUI Studio",
+  "name": "AV GUI Studio",
   "upgradeCode": "6A20AFB0-1719-4997-B174-FF986FAAFD9F",
   "sources": [
     "figcraft.wxs"
@@ -15,8 +15,8 @@
   ],
   "payloads": [
     "NOTICE",
-    "gui-studio-cli.exe",
-    "gui-studio.exe"
+    "av-gui-studio-cli.exe",
+    "av-gui-studio.exe"
   ],
   "registry": [
     [
@@ -63,61 +63,61 @@
     ],
     [
       "-1",
-      "Software\\Classes\\Applications\\gui-studio.exe",
+      "Software\\Classes\\Applications\\av-gui-studio.exe",
       "FriendlyAppName",
-      "GUI Studio"
+      "AV GUI Studio"
     ],
     [
       "-1",
-      "Software\\Classes\\Applications\\gui-studio.exe\\shell\\open\\command",
+      "Software\\Classes\\Applications\\av-gui-studio.exe\\shell\\open\\command",
       "",
       "\"[#FigcraftExe]\" \"%1\""
     ],
     [
       "-1",
-      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      "Software\\Classes\\Applications\\av-gui-studio.exe\\SupportedTypes",
       ".figcraft",
       ""
     ],
     [
       "-1",
-      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      "Software\\Classes\\Applications\\av-gui-studio.exe\\SupportedTypes",
       ".svg",
       ""
     ],
     [
       "-1",
-      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      "Software\\Classes\\Applications\\av-gui-studio.exe\\SupportedTypes",
       ".png",
       ""
     ],
     [
       "-1",
-      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      "Software\\Classes\\Applications\\av-gui-studio.exe\\SupportedTypes",
       ".jpg",
       ""
     ],
     [
       "-1",
-      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      "Software\\Classes\\Applications\\av-gui-studio.exe\\SupportedTypes",
       ".jpeg",
       ""
     ],
     [
       "-1",
-      "Software\\Classes\\Applications\\gui-studio.exe\\SupportedTypes",
+      "Software\\Classes\\Applications\\av-gui-studio.exe\\SupportedTypes",
       ".sketch",
       ""
     ],
     [
       "-1",
-      "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\gui-studio.exe",
+      "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\av-gui-studio.exe",
       "",
       "[#FigcraftExe]"
     ],
     [
       "-1",
-      "Software\\GUI Studio",
+      "Software\\AV GUI Studio",
       "InstallDir",
       "[INSTALLFOLDER]"
     ]

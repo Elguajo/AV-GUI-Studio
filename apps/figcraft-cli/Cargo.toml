@@ -4,10 +4,10 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish = false
-description = "GUI Studio command line: info, export, convert, render, scripted commands, MCP server, perf"
+description = "AV GUI Studio command line: info, export, convert, render, scripted commands, MCP server, perf"
 
 [[bin]]
-name = "gui-studio-cli"
+name = "av-gui-studio-cli"
 path = "src/main.rs"
 
 [lints]

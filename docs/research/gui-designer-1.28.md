@@ -135,7 +135,7 @@ Defaults: editing properties with a palette item selected changes that type's de
   - inline renaming;
   - double-clicking an item selects it on the canvas.
 
-## 11. Observed interaction quality (opportunities for GUI Studio)
+## 11. Observed interaction quality (opportunities for AV GUI Studio)
 
 - **Drag.** The object moves live and shows blue snap lines on edges aligned with siblings. Use Snap Lines is on by default. No distance readout appears, and spacing is not shown **[observed, second pass]**. In the first pass the canvas did not repaint during the drag.
 - **Property grid.** All editing happens in a generic WinForms grid. Colors are RGB triplets. States are edited by expanding sub-properties, and no canvas toggle previews a state **[observed]**.
@@ -144,9 +144,9 @@ Defaults: editing properties with a palette item selected changes that type's de
 - **Validation.** Errors appear only on Verify or Build, in a separate dialog, and the list goes stale until the next build **[help]**.
 - **Visual language.** Dense 2000s toolbar iconography with 30+ alignment icons in one strip. The panels have no visual hierarchy **[observed]**.
 
-## 12. Parity map for GUI Studio
+## 12. Parity map for AV GUI Studio
 
-| GUI Designer capability | GUI Studio approach | Phase |
+| GUI Designer capability | AV GUI Studio approach | Phase |
 |---|---|---|
 | Canvas, selection, nudge, arrange, lock, zoom | Figma interaction core (ADR-001). Marquee follows Figma (touch selects). Arrow nudge 1/10 px | 01 |
 | Align, distribute, match size | Figma-style align and distribute in the inspector header, plus "match size to first selected" | 01 |
@@ -168,7 +168,7 @@ Defaults: editing properties with a palette item selected changes that type's de
 
 These experiments ran on scratch copies only. The GDL inputs were built from `Project::demo()` by exporter CLI 0.8.8. The independent verifier passed 182/182 on `studio.gdl`, with SHA-256 `857C5161…056E`.
 
-### 13.1 Round-trip of a GUI Studio GDL
+### 13.1 Round-trip of a AV GUI Studio GDL
 
 - GUI Designer opened the file and marked it modified at once. Verify reported **0 errors, 0 warnings**. **Save and Build succeeded.** The container changed from a single entry to a multi-entry file that adds `<name>.tgz4`, about 800 KB of built panel output **[observed]**. Opening it in GCP requires this built form, as the exporter's GCP protocol from 2026-10-23 records.
 - `compare-graph` on the original and the re-saved file found no change to IDs, names, states, geometry or colors. GUI Designer changed only these fields **[observed]**:
@@ -208,7 +208,7 @@ The installed XML documentation (9,900 members) is read as documentation. No cod
 
 ### 13.4 Reference render
 
-[`assets/gd-1.28-aurora-home-1025m.png`](assets/gd-1.28-aurora-home-1025m.png) is GUI Designer's 1280×800 snapshot of the demo Home page, with SHA-256 `E8EB0665…2BA3`. It is the pixel reference for GUI Studio's canvas. Show Control Info must be off before taking a snapshot, because snapshots include the ID badges.
+[`assets/gd-1.28-aurora-home-1025m.png`](assets/gd-1.28-aurora-home-1025m.png) is GUI Designer's 1280×800 snapshot of the demo Home page, with SHA-256 `E8EB0665…2BA3`. It is the pixel reference for AV GUI Studio's canvas. Show Control Info must be off before taking a snapshot, because snapshots include the ID badges.
 
 ### 13.5 GCP binding experiment — blocked
 

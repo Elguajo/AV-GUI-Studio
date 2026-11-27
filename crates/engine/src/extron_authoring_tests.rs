@@ -355,7 +355,7 @@ fn the_chosen_exporter_is_checked_kept_in_the_preferences_and_reported() {
     assert_eq!(chosen["source"], "settings");
     assert!(s.prefs_unsaved, "kept at once");
     assert_eq!(s.prefs.extron_exporter, Some((cli.to_string_lossy().into_owned(), registry.to_string_lossy().into_owned())));
-    if std::env::var_os(gui_studio_extron::CLI_ENV).is_none() {
+    if gui_studio_extron::exporter_variable().is_none() {
         let found = s.execute("extron.exporter", &json!({})).unwrap();
         assert_eq!((found["source"].as_str(), found["cli"].as_str()), (Some("settings"), cli.to_str()));
     }

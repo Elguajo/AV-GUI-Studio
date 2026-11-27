@@ -113,7 +113,7 @@ pub static MENU: &[MenuItem] = &[
     m!("View", "Pixel preview", "view.pixelPreview"),
     m!("View", "Mask outlines", "view.maskOutlines"),
     m!("View", "Frame outlines", "view.frameOutlines"),
-    // GUI Studio's own: the Extron Control IDs on the canvas.
+    // AV GUI Studio's own: the Extron Control IDs on the canvas.
     m!("View", "Control ID badges", "view.controlIds"),
     // FigCraft's own: the canvas shows sRGB, so Display P3 files can mark what it can't show.
     m!("View", "Soft-proof sRGB", "view.proofSrgb"),
@@ -173,7 +173,7 @@ pub static MENU: &[MenuItem] = &[
     m!("Object", "Send backward", "arrange.backward"),
     m!("Object", "Send to back", "arrange.back"),
     m!("Object", SEP, ""),
-    // GUI Studio's own, from GUI Designer's Layout menu: sizes after the first selected layer,
+    // AV GUI Studio's own, from GUI Designer's Layout menu: sizes after the first selected layer,
     // and aligning each layer to its frame.
     m!("Object", "Same width", "arrange.sameWidth"),
     m!("Object", "Same height", "arrange.sameHeight"),
@@ -290,7 +290,7 @@ pub static MENU: &[MenuItem] = &[
     m!("Help", "Getting started", "help.gettingStarted"),
     m!("Help", "Keyboard shortcuts", "help.shortcuts"),
     m!("Help", "Help page", "help.page"),
-    m!("Help", "About GUI Studio", "help.about"),
+    m!("Help", "About AV GUI Studio", "help.about"),
     // Toolbar
     m!("Tools", "Move", "tool.move"),
     m!("Tools", "Scale", "tool.scale"),

@@ -350,7 +350,7 @@ fn widgets_banner(ctx: &Context, canvas: Rect, add: impl FnOnce(&mut Ui)) {
 /// The environment variable that names the exporter, when it is set: it wins over the app's choice.
 fn exporter_variable() -> Option<&'static str> {
     #[cfg(not(target_arch = "wasm32"))]
-    return figcraft_engine::gui_studio_extron::exporter_from_environment().then_some(figcraft_engine::gui_studio_extron::CLI_ENV);
+    return figcraft_engine::gui_studio_extron::exporter_variable();
     #[cfg(target_arch = "wasm32")]
     None
 }

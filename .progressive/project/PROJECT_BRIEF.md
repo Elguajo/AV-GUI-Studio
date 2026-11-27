@@ -1,8 +1,8 @@
-# Project Brief — GUI Studio
+# Project Brief — AV GUI Studio
 
 ## Outcome
 
-GUI Studio is our version of Extron GUI Designer: a standalone Rust desktop application for authoring and maintaining TouchLink Pro interfaces. Extron defines what the product can author: panel profiles, pages, popups, native controls, states, Control IDs and GDL. Figma defines how authoring feels. Designers create interfaces directly in GUI Studio. Integrators receive editable GDL and can revise a configured interface while keeping existing control bindings.
+AV GUI Studio is our version of Extron GUI Designer: a standalone Rust desktop application for authoring and maintaining TouchLink Pro interfaces. Extron defines what the product can author: panel profiles, pages, popups, native controls, states, Control IDs and GDL. Figma defines how authoring feels. Designers create interfaces directly in AV GUI Studio. Integrators receive editable GDL and can revise a configured interface while keeping existing control bindings.
 
 [Extron GUI Designer capabilities](https://www.extron.com/product/software/guidesigner)
 
@@ -18,9 +18,9 @@ GUI Studio is our version of Extron GUI Designer: a standalone Rust desktop appl
 
 ## Experience principle
 
-- Interaction parity with Figma. A Figma user can work in GUI Studio from muscle memory: canvas navigation, selection, transforms, smart guides, layers, the property inspector, shortcuts, frames and auto layout, components, variants, styles and variables. The roadmap delivers parity in phases.
+- Interaction parity with Figma. A Figma user can work in AV GUI Studio from muscle memory: canvas navigation, selection, transforms, smart guides, layers, the property inspector, shortcuts, frames and auto layout, components, variants, styles and variables. The roadmap delivers parity in phases.
 - Parity is limited to Extron authoring. Every Figma-style feature maps onto an Extron construct, such as variants onto control states and pages onto GDL pages. Design-time features such as auto layout and variables resolve to native values on export.
-- Visual language. The workspace follows Figma UI3 conventions, including compact density, neutral panels, layers on the left, the inspector on the right, a floating bottom toolbar, small type, a blue selection accent, and light and dark themes. GUI Studio uses its own design tokens, an open-licensed icon set and its own branding. It does not copy Figma's icons, logos or exact palette.
+- Visual language. The workspace follows Figma UI3 conventions, including compact density, neutral panels, layers on the left, the inspector on the right, a floating bottom toolbar, small type, a blue selection accent, and light and dark themes. AV GUI Studio uses its own design tokens, an open-licensed icon set and its own branding. It does not copy Figma's icons, logos or exact palette.
 
 ## Appearance fidelity
 

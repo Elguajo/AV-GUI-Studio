@@ -1,4 +1,4 @@
-//! Writes gui-studio-cli's shell completions and recursive man pages into a directory:
+//! Writes av-gui-studio-cli's shell completions and recursive man pages into a directory:
 //!
 //! ```sh
 //! cargo run -p figcraft-cli --example man-and-completions -- <out-dir>
@@ -39,6 +39,6 @@ pub(crate) fn generate(dir: &Path) -> std::io::Result<()> {
         clap_complete::generate_to(shell, &mut command, &name, dir)?;
     }
     // Completions build the command and add synthetic help subcommands. A fresh command keeps
-    // those out of the man pages (such as gui-studio-cli-help-export.1).
+    // those out of the man pages (such as av-gui-studio-cli-help-export.1).
     clap_mangen::generate_to(args::Cli::command(), dir)
 }

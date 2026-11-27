@@ -1,4 +1,4 @@
-//! Windows: embed the icon and version info in gui-studio.exe and size its main thread's stack
+//! Windows: embed the icon and version info in av-gui-studio.exe and size its main thread's stack
 //! (no-op elsewhere).
 fn main() {
     println!("cargo::rustc-check-cfg=cfg(windows_slim_errors)");
@@ -10,9 +10,9 @@ fn main() {
         if std::path::Path::new(ico).exists() {
             res.set_icon(ico);
         }
-        res.set("ProductName", "GUI Studio");
-        res.set("FileDescription", "GUI Studio");
-        res.set("CompanyName", "GUI Studio");
+        res.set("ProductName", "AV GUI Studio");
+        res.set("FileDescription", "AV GUI Studio");
+        res.set("CompanyName", "AV GUI Studio");
         if let Err(e) = res.compile() {
             println!("cargo::warning=winresource: {e}");
         }

@@ -134,13 +134,13 @@ built-in fonts. Attached, the app's own fonts apply. The browser build has no sy
 
 ## Configure a client
 
-Build the CLI first (`cargo build --locked --release -p figcraft-cli`). In GUI Studio the binaries are
-`target/release/gui-studio-cli` (the `figcraft-cli` below) and `target/release/gui-studio` (the app,
+Build the CLI first (`cargo build --locked --release -p figcraft-cli`). In AV GUI Studio the binaries are
+`target/release/av-gui-studio-cli` (the `figcraft-cli` below) and `target/release/av-gui-studio` (the app,
 `figcraft` below); on Windows they end in `.exe`.
 
 This repository already carries project configs for both clients, each with two servers:
-`gui-studio` (headless) and `gui-studio-app` (attached to an app started with
-`gui-studio --control 7979`):
+`av-gui-studio` (headless) and `av-gui-studio-app` (attached to an app started with
+`av-gui-studio --control 7979`):
 
 - Claude Code reads [`.mcp.json`](../.mcp.json) and asks once to approve its servers. `/mcp` shows
   whether they are connected.
@@ -149,12 +149,12 @@ This repository already carries project configs for both clients, each with two 
   servers elsewhere, register the absolute path instead:
 
 ```sh
-codex mcp add gui-studio -- D:/path/to/GUI-Studio/target/release/gui-studio-cli.exe mcp
-codex mcp add gui-studio-app -- D:/path/to/GUI-Studio/target/release/gui-studio-cli.exe mcp --attach 7979
+codex mcp add av-gui-studio -- D:/path/to/AV-GUI-Studio/target/release/av-gui-studio-cli.exe mcp
+codex mcp add av-gui-studio-app -- D:/path/to/AV-GUI-Studio/target/release/av-gui-studio-cli.exe mcp --attach 7979
 ```
 
-`gui-studio-app` needs the app running first: started without it, the server exits with `can't reach
-the GUI Studio app at 127.0.0.1:7979`, and the client lists it as failed. Start the app with
+`av-gui-studio-app` needs the app running first: started without it, the server exits with `can't reach
+the AV GUI Studio app at 127.0.0.1:7979`, and the client lists it as failed. Start the app with
 `--control 7979`, then reconnect it (`/mcp` in Claude Code, or a new Codex session).
 
 The Linux AppImage bundles the CLI: `FigCraft.AppImage cli <args>` runs `figcraft-cli <args>`, so

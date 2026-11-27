@@ -1,4 +1,4 @@
-//! Editable Aurora Meeting Room example, with the original GUI Studio Object and Control IDs.
+//! Editable Aurora Meeting Room example, with the original AV GUI Studio Object and Control IDs.
 
 use figcraft_color::{Color as CanvasColor, Paint};
 use figcraft_doc::{Constraints, Document, HConstraint, Node, NodeId, NodeKind, TextAlignH, TextAlignV, TextAutoResize, TextData, VConstraint};

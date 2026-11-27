@@ -11,7 +11,7 @@
 pub const UPDATE_APP: craft_update::app::App = craft_update::app::App {
     icon_png: Some(include_bytes!("../../../assets/app-icon/hicolor/128x128/apps/ai.storyteller.figcraft.png")),
     accent: Some([0x02, 0xda, 0x96]),
-    ..craft_update::app::App::new("gui-studio", "GUI Studio", "Touch panel layout editor", "Elguajo/GUI-Studio")
+    ..craft_update::app::App::new("av-gui-studio", "AV GUI Studio", "Touch panel layout editor", "Elguajo/AV-GUI-Studio")
 };
 
 pub mod a11y;

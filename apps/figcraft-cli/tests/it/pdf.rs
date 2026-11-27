@@ -1,9 +1,9 @@
-//! `gui-studio-cli export --format pdf` and `convert … .pdf` end to end.
+//! `av-gui-studio-cli export --format pdf` and `convert … .pdf` end to end.
 
 use std::process::Command;
 
 fn bin() -> Command {
-    Command::new(env!("CARGO_BIN_EXE_gui-studio-cli"))
+    Command::new(env!("CARGO_BIN_EXE_av-gui-studio-cli"))
 }
 
 fn pages(pdf: &[u8]) -> usize {
@@ -13,7 +13,7 @@ fn pages(pdf: &[u8]) -> usize {
 
 #[test]
 fn pdf_export_one_page_per_frame() {
-    let d = std::env::temp_dir().join(format!("gui-studio-cli-pdf-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("av-gui-studio-cli-pdf-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     // Two frames and a loose rectangle (not a frame: left out of the frames PDF).
     let script = d.join("s.jsonl");

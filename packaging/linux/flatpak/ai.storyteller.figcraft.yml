@@ -56,7 +56,7 @@ modules:
     build-commands:
       - cargo --offline build --release --locked -p figcraft
       # Cargo's output is named by apps/figcraft's [[bin]]; the installed name stays figcraft.
-      - install -Dm755 target/release/gui-studio /app/bin/figcraft
+      - install -Dm755 target/release/av-gui-studio /app/bin/figcraft
       - install -Dm644 NOTICE /app/share/doc/figcraft/NOTICE
       - install -Dm644 packaging/linux/ai.storyteller.figcraft.desktop /app/share/applications/ai.storyteller.figcraft.desktop
       - install -Dm644 packaging/linux/ai.storyteller.figcraft.mime.xml /app/share/mime/packages/ai.storyteller.figcraft.xml

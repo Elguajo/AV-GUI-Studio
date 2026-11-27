@@ -246,7 +246,7 @@ fn parity() -> bool {
         .map(|d| d.trim().to_string())
         .unwrap_or_default();
     let mut md = format!(
-        "# Parity checklist\n\n> **Generated:** {date} by `cargo xtask parity`. Do not edit by hand.\n\nGUI Studio commands registered for the incumbent's main menu and toolbar ({} commands in the engine).\n\n**{done} / {total} menu items ({pct:.1}%)**\n\n",
+        "# Parity checklist\n\n> **Generated:** {date} by `cargo xtask parity`. Do not edit by hand.\n\nAV GUI Studio commands registered for the incumbent's main menu and toolbar ({} commands in the engine).\n\n**{done} / {total} menu items ({pct:.1}%)**\n\n",
         figcraft_engine::all_commands().len()
     );
     if missing.is_empty() {

@@ -1,4 +1,4 @@
-//! GUI Studio desktop app.
+//! AV GUI Studio desktop app.
 //!
 //! Usage: `figcraft [--control <port>] [files…] [figcraft://join?…]` (an invite link joins that
 //! live session; the app registers itself as the opener of such links: `collab.registerLinks`).
@@ -147,7 +147,7 @@ fn main() -> eframe::Result {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.iter().any(|a| a == "--version" || a == "-V") {
         println!(
-            "GUI Studio {}{}",
+            "AV GUI Studio {}{}",
             env!("CARGO_PKG_VERSION"),
             option_env!("FIGCRAFT_BUILD_SHA").filter(|s| !s.is_empty()).map(|s| format!(" ({s})")).unwrap_or_default()
         );
@@ -156,7 +156,7 @@ fn main() -> eframe::Result {
     let args = args::parse(&args);
     if let Some(flag) = args.unknown.first() {
         eprintln!(
-            "GUI Studio: unknown option {flag}\nUsage: gui-studio [--control PORT] [--automation-read-root DIR]... [--automation-write-root DIR]... [FILE | figcraft://join?...]..."
+            "AV GUI Studio: unknown option {flag}\nUsage: av-gui-studio [--control PORT] [--automation-read-root DIR]... [--automation-write-root DIR]... [FILE | figcraft://join?...]..."
         );
         std::process::exit(2);
     }
@@ -167,7 +167,7 @@ fn main() -> eframe::Result {
         (true, _) => None,
         (false, Ok(r)) => Some(Arc::new(r)),
         (false, Err(e)) => {
-            eprintln!("GUI Studio: {e}");
+            eprintln!("AV GUI Studio: {e}");
             std::process::exit(2);
         }
     };
@@ -253,18 +253,18 @@ fn main() -> eframe::Result {
     // The app id is the Wayland app_id and the X11 window class on Linux: the desktop entry's name
     // and StartupWMClass (FreeBSD's package matches the binary's name instead).
     let mut viewport = egui::ViewportBuilder::default()
-        .with_title("GUI Studio")
+        .with_title("AV GUI Studio")
         .with_app_id("ai.storyteller.figcraft")
         .with_inner_size([1440.0, 900.0])
         .with_min_inner_size([800.0, 500.0])
         .with_drag_and_drop(true);
     // Who draws the window frame is decided once, before the viewport is built, by the shared
     // craft-window crate (the rest of the Craft suite uses it too). On macOS the system frame is
-    // kept with GUI Studio's inset traffic lights; on Windows it is the system frame; on Linux the
+    // kept with AV GUI Studio's inset traffic lights; on Windows it is the system frame; on Linux the
     // decision follows the desktop: a Wayland compositor with server-side decorations (KDE, Sway,
     // Hyprland, COSMIC) or an X11 window manager keeps the native frame, while GNOME's Mutter —
     // which draws no server-side frame — leaves it to the app's own custom title bar. This replaces
-    // the old bespoke xdg-decoration probe that always drew GUI Studio's custom title bar on KDE.
+    // the old bespoke xdg-decoration probe that always drew AV GUI Studio's custom title bar on KDE.
     fig.ui.title_bar = desktop_title_bar();
     viewport = window_chrome(viewport, fig.ui.title_bar);
     let custom_titlebar = fig.ui.title_bar == figcraft_ui_egui::TitleBar::Custom;
@@ -283,7 +283,7 @@ fn main() -> eframe::Result {
     #[cfg(target_os = "macos")]
     let apple_events = &apple_events;
     let result = eframe::run_native(
-        "GUI Studio",
+        "AV GUI Studio",
         options,
         Box::new(|cc| {
             if let Some(state) = &cc.wgpu_render_state {
@@ -296,7 +296,7 @@ fn main() -> eframe::Result {
             // asks just as it does for the close button. Failure keeps winit's menu: the app
             // runs, but ⌘Q ends it without asking.
             #[cfg(target_os = "macos")]
-            if let Err(e) = craft_menu::mac::install_app_menu(&cc.egui_ctx, "GUI Studio") {
+            if let Err(e) = craft_menu::mac::install_app_menu(&cc.egui_ctx, "AV GUI Studio") {
                 log::warn!("app menu: kept winit's Quit, which ends the app without asking: {e}");
             }
             Ok(Box::new(App {
@@ -326,7 +326,7 @@ fn opens_new_file(first_run: bool, start_on_home: bool, control: bool) -> bool {
     !first_run && (!start_on_home || control)
 }
 
-/// The title bar GUI Studio starts with, decided by the shared craft-window crate so every Craft app
+/// The title bar AV GUI Studio starts with, decided by the shared craft-window crate so every Craft app
 /// agrees on who draws the frame per desktop. The override variable is `FIGCRAFT_TITLEBAR`
 /// (`app` / `system`). macOS keeps its inset traffic lights unchanged (craft-window returns the
 /// desktop frame there); Windows keeps the system frame; on Linux the compositor/window manager
@@ -336,12 +336,12 @@ fn desktop_title_bar() -> figcraft_ui_egui::TitleBar {
     title_bar_for(choice.into_frame())
 }
 
-/// Map craft-window's [`craft_window::Frame`] onto GUI Studio's own [`figcraft_ui_egui::TitleBar`].
+/// Map craft-window's [`craft_window::Frame`] onto AV GUI Studio's own [`figcraft_ui_egui::TitleBar`].
 ///
-/// `Frame::App` means the app draws its own frame — GUI Studio's custom title bar. `Frame::Desktop`
-/// means the desktop draws it, but GUI Studio keeps each platform's existing look there:
+/// `Frame::App` means the app draws its own frame — AV GUI Studio's custom title bar. `Frame::Desktop`
+/// means the desktop draws it, but AV GUI Studio keeps each platform's existing look there:
 /// - macOS: the inset title bar with its traffic lights (`TitleBar::Inset`), unchanged.
-/// - Windows: GUI Studio's own custom title bar (`TitleBar::Custom`), unchanged — Windows never used
+/// - Windows: AV GUI Studio's own custom title bar (`TitleBar::Custom`), unchanged — Windows never used
 ///   the plain native frame, and craft-window returning `Desktop` on Windows must not change that.
 /// - Linux and the BSDs: the compositor's native frame (`TitleBar::Native`). This is the only
 ///   behaviour change: KDE and the other server-side-decoration compositors now keep their frame.
@@ -349,7 +349,7 @@ fn title_bar_for(frame: craft_window::Frame) -> figcraft_ui_egui::TitleBar {
     use figcraft_ui_egui::TitleBar;
     match frame {
         craft_window::Frame::Desktop if cfg!(target_os = "macos") => TitleBar::Inset,
-        // Windows kept GUI Studio's own title bar before this change; keep it.
+        // Windows kept AV GUI Studio's own title bar before this change; keep it.
         craft_window::Frame::Desktop if cfg!(target_os = "windows") => TitleBar::Custom,
         craft_window::Frame::Desktop => TitleBar::Native,
         // The app draws the frame (GNOME's Wayland session, or a `FIGCRAFT_TITLEBAR=app` override).
@@ -371,8 +371,8 @@ mod title_bar_tests {
     use figcraft_ui_egui::TitleBar;
 
     /// craft-window's app frame (GNOME's Wayland session, or a `FIGCRAFT_TITLEBAR=app` override)
-    /// becomes GUI Studio's custom title bar on every platform, and `window_chrome` then drops the
-    /// decorations so GUI Studio draws its own.
+    /// becomes AV GUI Studio's custom title bar on every platform, and `window_chrome` then drops the
+    /// decorations so AV GUI Studio draws its own.
     #[test]
     fn the_app_frame_maps_to_the_custom_title_bar() {
         let layout = craft_window::Layout::default();
@@ -383,7 +383,7 @@ mod title_bar_tests {
     }
 
     /// craft-window's desktop frame keeps each platform's existing look: macOS its inset traffic
-    /// lights, Windows GUI Studio's own custom title bar (unchanged), and Linux/BSD the compositor's
+    /// lights, Windows AV GUI Studio's own custom title bar (unchanged), and Linux/BSD the compositor's
     /// native frame. The Linux case is the only behaviour change: KDE and the other
     /// server-side-decoration compositors now keep their native frame.
     #[test]

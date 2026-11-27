@@ -199,19 +199,19 @@ pub(super) fn shape_interactions(items: &[Value], warnings: &mut Vec<String>) ->
         let event = item.get("eventType").and_then(Value::as_str);
         let Some(trigger) = penpot_trigger(event, item.get("delay").and_then(Value::as_u64).map(|d| d.min(u64::from(MAX_DELAY_MS)) as u32)) else {
             warnings
-                .push(format!("Penpot interaction with event type '{}' has no GUI Studio equivalent and was skipped", event.unwrap_or("unknown")));
+                .push(format!("Penpot interaction with event type '{}' has no AV GUI Studio equivalent and was skipped", event.unwrap_or("unknown")));
             continue;
         };
         let Some(kind) = penpot_action_kind(item.get("actionType").and_then(Value::as_str)) else {
             warnings.push(format!(
-                "Penpot interaction with action type '{}' has no GUI Studio equivalent and was skipped",
+                "Penpot interaction with action type '{}' has no AV GUI Studio equivalent and was skipped",
                 item.get("actionType").and_then(Value::as_str).unwrap_or("unknown")
             ));
             continue;
         };
         let Some((action, destination)) = penpot_action(item, &kind) else {
             warnings.push(format!(
-                "Penpot interaction with action type '{}' has no GUI Studio equivalent and was skipped",
+                "Penpot interaction with action type '{}' has no AV GUI Studio equivalent and was skipped",
                 item.get("actionType").and_then(Value::as_str).unwrap_or("unknown")
             ));
             continue;
@@ -303,7 +303,7 @@ pub(super) fn resolve_destinations(doc: &mut Document, by_penpot_id: &BTreeMap<S
         }
     }
     if mapped > 0 {
-        warnings.push(format!("Imported {mapped} Penpot prototype connection(s) as working GUI Studio interactions"));
+        warnings.push(format!("Imported {mapped} Penpot prototype connection(s) as working AV GUI Studio interactions"));
     }
     if missing > 0 {
         warnings.push(format!("{missing} Penpot prototype destination(s) named no layer in the file; those connections were skipped"));

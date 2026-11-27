@@ -10,21 +10,21 @@ use std::net::{Ipv4Addr, SocketAddr};
 use clap::{ArgAction, Args, CommandFactory, FromArgMatches, Parser, Subcommand};
 use figcraft_doc::{PrintSettings, VdCompat};
 
-/// GUI Studio without a window
+/// AV GUI Studio without a window
 ///
-/// Files: .figcraft (native), .penpot (Penpot 2.x), .json (GUI Studio or REST API file JSON), .fig
+/// Files: .figcraft (native), .penpot (Penpot 2.x), .json (AV GUI Studio or REST API file JSON), .fig
 /// (best effort; `info` lists what wasn't imported), .sketch (Sketch 48 or newer, best effort),
 /// .svg, .png/.jpg/.webp/.gif/.bmp (open as an image layer).
 #[derive(Parser)]
 #[command(
-    name = "gui-studio-cli",
-    bin_name = "gui-studio-cli",
+    name = "av-gui-studio-cli",
+    bin_name = "av-gui-studio-cli",
     version,
     arg_required_else_help = true,
     after_help = "See docs/cli.md and docs/mcp.md."
 )]
 pub struct Cli {
-    /// Lay text out with the fonts built into GUI Studio only, for renders that match on every
+    /// Lay text out with the fonts built into AV GUI Studio only, for renders that match on every
     /// machine (or set FIGCRAFT_NO_SYSTEM_FONTS=1). Otherwise installed fonts are indexed the
     /// first time text is laid out, as in the app
     #[arg(long, global = true)]
@@ -350,7 +350,7 @@ pub fn parse(args: Vec<OsString>) -> Result<Cli, clap::Error> {
     }
 }
 
-/// The program name and the subcommands `args` names (`gui-studio-cli plugin publish`): at each
+/// The program name and the subcommands `args` names (`av-gui-studio-cli plugin publish`): at each
 /// level, the first argument that isn't a flag, while it names a subcommand.
 fn subcommand_path(cmd: &clap::Command, args: &[OsString]) -> Vec<OsString> {
     let mut path: Vec<OsString> = args.first().cloned().into_iter().collect();
@@ -371,7 +371,7 @@ mod tests {
     use super::{Cli, Command, ConnectCommand, PluginCommand, parse};
 
     fn try_parse(args: &[&str]) -> Result<Cli, clap::Error> {
-        parse(std::iter::once("gui-studio-cli").chain(args.iter().copied()).map(Into::into).collect())
+        parse(std::iter::once("av-gui-studio-cli").chain(args.iter().copied()).map(Into::into).collect())
     }
 
     fn ok(args: &[&str]) -> Command {
@@ -573,7 +573,7 @@ mod tests {
         }
         // The help is the subcommand's, even after a mistake.
         let help = try_parse(&["plugin", "publish", "--bogus", "--help"]).err().map(|e| e.to_string()).unwrap_or_default();
-        assert!(help.contains("Usage: gui-studio-cli plugin publish"), "{help}");
+        assert!(help.contains("Usage: av-gui-studio-cli plugin publish"), "{help}");
         // After `--`, `-h` is a file name.
         let Command::Info(a) = ok(&["info", "--", "-h"]) else { panic!("info") };
         assert_eq!(a.file, "-h");
@@ -587,7 +587,7 @@ mod tests {
         let mut todo = vec![cli];
         while let Some(mut cmd) = todo.pop() {
             let help = cmd.render_long_help().to_string();
-            assert!(help.contains("Usage: gui-studio-cli"), "{}: {help}", cmd.get_name());
+            assert!(help.contains("Usage: av-gui-studio-cli"), "{}: {help}", cmd.get_name());
             for arg in cmd.get_arguments().filter(|a| !matches!(a.get_long(), Some("help" | "version"))) {
                 assert!(arg.get_help().is_some(), "{} {}", cmd.get_name(), arg.get_id());
             }

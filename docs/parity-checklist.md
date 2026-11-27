@@ -2,7 +2,7 @@
 
 > **Generated:** 2026-11-23 by `cargo xtask parity`. Do not edit by hand.
 
-GUI Studio commands registered for the incumbent's main menu and toolbar (656 commands in the engine).
+AV GUI Studio commands registered for the incumbent's main menu and toolbar (656 commands in the engine).
 
 **215 / 215 menu items (100.0%)**
 

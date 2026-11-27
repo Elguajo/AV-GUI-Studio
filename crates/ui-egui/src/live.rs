@@ -1131,7 +1131,8 @@ fn share_ui(app: &mut FigApp, ui: &mut Ui, t: &Tokens, share: &Share) {
                     app.clipboard_set_text(&code);
                     app.toast(tr("Join code copied"));
                 }
-                if widgets::button(ui, tr("Copy link"), false, true).on_hover_text(tr("An invite link that opens GUI Studio and joins")).clicked() {
+                if widgets::button(ui, tr("Copy link"), false, true).on_hover_text(tr("An invite link that opens AV GUI Studio and joins")).clicked()
+                {
                     app.clipboard_set_text(&link);
                     app.toast(tr("Invite link copied"));
                 }

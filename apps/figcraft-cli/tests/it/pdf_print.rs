@@ -1,14 +1,14 @@
-//! `gui-studio-cli export` with PDF print options: bleed, marks, CMYK; bad lengths are usage errors.
+//! `av-gui-studio-cli export` with PDF print options: bleed, marks, CMYK; bad lengths are usage errors.
 
 use std::process::Command;
 
 fn bin() -> Command {
-    Command::new(env!("CARGO_BIN_EXE_gui-studio-cli"))
+    Command::new(env!("CARGO_BIN_EXE_av-gui-studio-cli"))
 }
 
 #[test]
 fn pdf_export_with_bleed_marks_and_cmyk() {
-    let d = std::env::temp_dir().join(format!("gui-studio-cli-print-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("av-gui-studio-cli-print-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     let script = d.join("s.jsonl");
     std::fs::write(&script, r##"{"command":"frame.create","params":{"x":0,"y":0,"width":100,"height":50,"name":"A","props":{"fill":"#ff0000"}}}"##)

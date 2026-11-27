@@ -27,8 +27,11 @@ pub struct Desktop {
     last_folder: Arc<Mutex<Option<PathBuf>>>,
 }
 
-/// Separate GUI Studio profile and craft-settings app ID. GUI_STUDIO_CONFIG_DIR overrides it.
-const APP_ID: &str = "gui-studio";
+/// Separate AV GUI Studio profile and craft-settings app ID. AV_GUI_STUDIO_CONFIG_DIR overrides it.
+const APP_ID: &str = "av-gui-studio";
+/// The app ID before the rename to AV GUI Studio: its platform folder moves to [`APP_ID`]'s, and
+/// GUI_STUDIO_CONFIG_DIR still counts when AV_GUI_STUDIO_CONFIG_DIR isn't set.
+const OLD_APP_ID: &str = "gui-studio";
 
 /// Where the preferences, recovery copies and installed plugins live ([`settings_dir`]).
 pub fn config_dir() -> Option<PathBuf> {
@@ -48,21 +51,50 @@ fn platform_dir() -> Option<PathBuf> {
 }
 
 /// The settings folder by the suite's rules (craft-settings), from what `probe` sees:
-/// `GUI_STUDIO_CONFIG_DIR` (set but empty: none, nothing read or written); a `portable` file next
-/// to the executable (next to the `.app` on macOS), which puts them in `config/` beside it; else
-/// `gui-studio` in the platform folder. A portable folder without
+/// `AV_GUI_STUDIO_CONFIG_DIR`, else `GUI_STUDIO_CONFIG_DIR` (set but empty: none, nothing read or
+/// written); a `portable` file next to the executable (next to the `.app` on macOS), which puts
+/// them in `config/` beside it; else `av-gui-studio` in the platform folder, where the
+/// `gui-studio` folder from before the rename moves first. A portable folder without
 /// preferences yet starts with a copy of the platform folder's, so an existing copy that becomes
 /// portable keeps its settings; the original stays for an installed app. No platform folder: none.
 pub(crate) fn settings_dir(probe: &craft_settings::Probe) -> Option<PathBuf> {
+    use craft_settings::paths::env_var_name;
     use craft_settings::{Location, Portable, Rule};
+    if (probe.env)(&env_var_name(APP_ID)).is_none()
+        && let Some(value) = (probe.env)(&env_var_name(OLD_APP_ID))
+    {
+        return (!value.is_empty()).then(|| PathBuf::from(value));
+    }
+    // Where the move failed (another copy still has a file open), the old folder serves this run.
+    let platform = probe.platform_config_dir.as_deref().map(|base| adopt_old_folder(base).unwrap_or_else(|| base.join(APP_ID)));
     let resolved = craft_settings::paths::resolve(APP_ID, &Portable::DEFAULT, &Location::Auto, probe);
-    match (&resolved.rule, &resolved.dir, &probe.platform_config_dir) {
-        (Rule::Portable, Some(dir), Some(platform)) => seed(dir, &platform.join(APP_ID)),
+    match (&resolved.rule, &resolved.dir, &platform) {
+        (Rule::Portable, Some(dir), Some(platform)) => seed(dir, platform),
+        (Rule::Platform, Some(_), Some(platform)) => return Some(platform.clone()),
         // The current directory instead: settings would follow wherever the app was started.
         (Rule::Fallback, ..) => return None,
         _ => {}
     }
     resolved.dir
+}
+
+/// Move the settings folder from before the rename (`gui-studio`) to [`APP_ID`]'s in the platform
+/// folder `base`, when only the old one is there. The old folder, if it couldn't be moved.
+fn adopt_old_folder(base: &Path) -> Option<PathBuf> {
+    let (old, new) = (base.join(OLD_APP_ID), base.join(APP_ID));
+    if new.exists() || !old.is_dir() {
+        return None;
+    }
+    match std::fs::rename(&old, &new) {
+        Ok(()) => {
+            log::info!("settings: moved {} to {}", old.display(), new.display());
+            None
+        }
+        Err(e) => {
+            log::warn!("settings: couldn't move {} to {}: {e}; using it where it is", old.display(), new.display());
+            Some(old)
+        }
+    }
 }
 
 /// Copy `from`'s preferences into the folder `to` when it has none (owner-only, as written).
@@ -438,7 +470,7 @@ fn read_clipboard<T>(c: &mut arboard::Clipboard, read: fn(&mut arboard::Clipboar
 /// Native Save as filters; other callers keep their existing combined filter.
 fn save_filters<'a>(exts: &'a [&'a str]) -> Vec<(&'static str, &'a [&'a str])> {
     if exts == ["figcraft", "fig"] {
-        vec![("GUI Studio (.figcraft)", &exts[..1]), (figcraft_ui_egui::i18n::tr(".fig (experimental)"), &exts[1..])]
+        vec![("AV GUI Studio (.figcraft)", &exts[..1]), (figcraft_ui_egui::i18n::tr(".fig (experimental)"), &exts[1..])]
     } else {
         vec![("File", exts)]
     }
@@ -645,7 +677,7 @@ mod save_filter_tests {
         let extensions = ["figcraft", "fig"];
         assert_eq!(
             save_filters(&extensions),
-            vec![("GUI Studio (.figcraft)", &extensions[..1]), (figcraft_ui_egui::i18n::tr(".fig (experimental)"), &extensions[1..])]
+            vec![("AV GUI Studio (.figcraft)", &extensions[..1]), (figcraft_ui_egui::i18n::tr(".fig (experimental)"), &extensions[1..])]
         );
     }
 
